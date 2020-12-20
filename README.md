@@ -1,6 +1,6 @@
 # Expect
 
-Mocking API calls in Python - inspired by Ruby's RSpec-Mocks.
+Mocking function calls in Python - inspired by Ruby's RSpec-Mocks.
 
 The content of this repo is an example of project, containing a `models` and a `tests` modules:
 
@@ -9,13 +9,16 @@ The content of this repo is an example of project, containing a `models` and a `
 
 This **Expect** module allows to mock and/or listen to API calls for the purposes of unit tests, assuming that a test database or API is not always available.
 
-## Examples
+## Install
 
+## Context Management
+
+## Examples
 The following use cases are covered:
 
-* asserting that a method is called (the right number of times);
-* checking the arguments passed to a method;
-* overriding a method so that it returns a given output when called;
+* asserting that a method is called (the right number of times),
+* checking the arguments passed to a method,
+* overriding a method so that it returns a given output when called,
 * overriding a method so that it raises an exception when called.
 
 The above features can be combined too, as shown below.
