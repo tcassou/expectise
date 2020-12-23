@@ -3,14 +3,15 @@ from distutils.core import setup
 
 
 version = "0.0.0"
+name = "expector"
 
 setup(
-    name="expect",
-    packages=["expect"],
+    name=name,
+    packages=[name],
     version=version,
     description="Mocking API and function calls in Python - inspired by Ruby's RSpec-Mocks.",
-    url="https://github.com/tcassou/expect",
-    download_url=f"https://github.com/tcassou/expect/archive/{version}.tar.gz",
+    url=f"https://github.com/tcassou/{name}",
+    download_url=f"https://github.com/tcassou/{name}/archive/{version}.tar.gz",
     keywords=["python", "testing", "mocking", "unit", "tests"],
     classifiers=[
         "Intended Audience :: Developers",

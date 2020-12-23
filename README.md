@@ -1,4 +1,4 @@
-# Expect
+# Expector
 ![Lint, Test and Release](https://github.com/tcassou/expect/workflows/Lint,%20Test%20and%20Release/badge.svg?branch=master)
 
 Mocking function calls in Python - inspired by Ruby's RSpec-Mocks.

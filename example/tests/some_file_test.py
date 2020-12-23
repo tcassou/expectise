@@ -3,8 +3,8 @@ from models.some_api import SomeAPI
 from nose.tools import assert_raises
 from tests.my_test_case import MyTestCase
 
-from expect import Expect
-from expect.exceptions import EnvironmentError
+from expector import Expect
+from expector.exceptions import EnvironmentError
 
 
 class SomeFileTest(MyTestCase):
