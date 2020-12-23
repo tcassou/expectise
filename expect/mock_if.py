@@ -17,8 +17,8 @@ def mock_if(env_name, env_value):
     :return: the decorator class that implements the mocking logic
     :rtype: MockDecorator
     """
-    class MockDecorator:
 
+    class MockDecorator:
         def __init__(self, method):
             """
             Decorator class, that takes as input the method to be mocked:
@@ -60,7 +60,7 @@ def mock_if(env_name, env_value):
             if owner.__name__ not in Expect.class_h:
                 Expect.class_h[owner.__name__] = owner
             # and we mark the method itself as mocked, to alter its behavior and watch its calls
-            Expect.method_h[(owner.__name__, name)] = {'method': self.method, **Expect.init_args()}
+            Expect.method_h[(owner.__name__, name)] = {"method": self.method, **Expect.init_args()}
 
         def __call__(self, *args, **kwargs):
             """

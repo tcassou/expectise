@@ -1,0 +1,27 @@
+default_language_version:
+    python: python3.8
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.3.0
+    hooks:
+    -   id: check-yaml
+    -   id: end-of-file-fixer
+    -   id: trailing-whitespace
+    -   id: flake8
+    -   id: debug-statements
+    -   id: check-added-large-files
+    -   id: pretty-format-json
+        args:
+        - --autofix
+        - --indent=2
+        - --no-ensure-ascii
+        - --no-sort-keys
+-   repo: https://github.com/asottile/reorder_python_imports.git
+    rev: v2.1.0
+    hooks:
+    -   id: reorder-python-imports
+-   repo: https://github.com/psf/black
+    rev: stable
+    hooks:
+    -   id: black
+        language_version: python3.8

@@ -5,6 +5,5 @@ from expect import Expect
 
 
 class MyTestCase(TestCase):
-
     def tearDown(self):
         Expect.tear_down()
