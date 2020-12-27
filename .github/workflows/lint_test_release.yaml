@@ -15,7 +15,7 @@ jobs:
     - name: Install Python Dependencies
       run: |
         pip install --upgrade pip setuptools
-        pip install flake8 pre-commit==2.9.3
+        pip install pre-commit==2.9.3
     - name: Lint with pre-commit
       run: script -e -c "pre-commit run --all-files"
 

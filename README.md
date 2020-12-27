@@ -1,5 +1,5 @@
-# Expector
-![Lint, Test and Release](https://github.com/tcassou/expect/workflows/Lint,%20Test%20and%20Release/badge.svg?branch=master)
+# Expectise
+![Lint, Test and Release](https://github.com/tcassou/expectise/workflows/Lint,%20Test%20and%20Release/badge.svg?branch=master)
 
 Mocking function calls in Python - inspired by Ruby's RSpec-Mocks.
 
@@ -8,9 +8,13 @@ The content of this repo is an example of project, containing a `models` and a `
 * `models` defines API classes, used to get / post / update / delete data;
 * `tests` defines the project unit tests.
 
-This **Expect** module allows to mock and/or listen to API calls for the purposes of unit tests, assuming that a test database or API is not always available.
+This **expectise** module allows to mock and/or listen to API calls for the purposes of unit tests, assuming that a test database or API is not always available.
 
 ## Install
+Install from [Pypi](https://pypi.org/project/expectise/):
+```
+pip install expectise
+```
 
 ## Context Management
 
@@ -46,8 +50,3 @@ Expect('MyModel').to_receive('my_method').with_args(*my_args_2, **my_kwargs_2).a
 
 Note that if a method decorated at least once with an `Expect` statement is called more or less times than the number
 of Expect statements, the unit test will fail.
-
-## Try it yourself
-
-From the terminal, `cd` to this repo and simply run: `nosetests tests/some_file_test.py`.
-Have a look at `tests/some_file_test.py` and start playing with `Expect` statements!

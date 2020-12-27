@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from example.models.base_api import BaseAPI
-from expector import mock_if
+from expectise import mock_if
 
 
 class SomeAPI(BaseAPI):

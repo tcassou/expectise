@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from expector import mock_if
+from expectise import mock_if
 
 
 class BaseAPI:

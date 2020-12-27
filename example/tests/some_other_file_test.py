@@ -3,8 +3,8 @@ from unittest import TestCase
 
 from models.some_api import SomeAPI
 
-from expector import Expect
-from expector import Expectations
+from expectise import Expect
+from expectise import Expectations
 
 
 class SomeOtherFileTest(TestCase):

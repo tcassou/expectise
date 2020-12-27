@@ -2,8 +2,8 @@
 from distutils.core import setup
 
 
-version = "0.0.1"
-name = "expector"
+version = "0.0.2"
+name = "expectise"
 
 setup(
     name=name,

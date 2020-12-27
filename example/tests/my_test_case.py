@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from unittest import TestCase
 
-from expector import Expect
+from expectise import Expect
 
 
 class MyTestCase(TestCase):
