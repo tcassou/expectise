@@ -158,8 +158,10 @@ class Expect(object):
         args, kwargs = Expect.method_h[(self.klass.__name__, self.method_name)]["with_args"][call_idx]
         if args != func_args or kwargs != func_kwargs:
             raise ExpectationError(
-                f"<{self.method_name}> method of class <{self.klass.__name__}> called with {(func_args, func_kwargs)} "
-                "instead of expected {(args, kwargs)}"
+                f"""
+                `{self.method_name}` method of class `{self.klass.__name__}` called with {(func_args, func_kwargs)}
+                 instead of expected {(args, kwargs)}.
+                """
             )
 
     def with_args_decorator(self, method):
