@@ -31,11 +31,10 @@ def mock_if(env_name, env_value):
             :return: None
             """
             self.method = method
+            self.is_classmethod = isinstance(method, classmethod)
+            self.is_staticmethod = isinstance(method, staticmethod)
             self.owner = None
-            if isinstance(method, classmethod) or isinstance(method, classmethod):
-                self.method_name = method.__func__.__name__
-            else:
-                self.method_name = method.__name__
+            self.name = method.__func__.__name__ if self.is_classmethod or self.is_staticmethod else method.__name__
 
         def __set_name__(self, owner, name):
             """
@@ -56,30 +55,31 @@ def mock_if(env_name, env_value):
                 setattr(owner, name, self.method)
                 return
 
-            # In test environment, we mark the object owning the mocked method as owning mocked elements
-            if owner.__name__ not in Expect.class_h:
-                Expect.class_h[owner.__name__] = owner
-            # and we mark the method itself as mocked, to alter its behavior and watch its calls
-            Expect.method_h[(owner.__name__, name)] = {"method": self.method, **Expect.init_args()}
+            # In test environment, the mocked methods are replaced by placeholders that raise errors if called without
+            # the prior use of an `Expect` statement to define how they should behave during tests.
+            Expect.set_up(owner, name, self.surrogate())
 
-        def __call__(self, *args, **kwargs):
+        def surrogate(self):
             """
-            In test environment, the mocked methods are replaced by an instance of MockDecorator. This method makes
-            them callable, in order to raise errors if called without the prior definition of an `Expect` statement
-            to define how they should behave during the tests being run.
+            Define a surrogate function that will replace any mocked method, so that any call to the method raises an
+            error if not preceded by the appropriate `Expect` statement.
 
-            :param args: positional arguments
-            :type args: [object]
-            :param kwargs: keyword arguments
-            :type kwargs: {str: object}
-
-            :return: None
+            :return: the function, possibly wrapped as a staticmethod or classmethod
+            :rtype: callable
             """
-            raise EnvironmentError(
-                f"""
-                Method `{self.method_name}` from class `{self.owner.__name__}` is mocked when {env_name}={env_value},
-                and will raise errors if called without using an `Expect` statement to define its mocked behavior.
-                """
-            )
+
+            def func(*args, **kwargs):
+                raise EnvironmentError(
+                    f"""
+                    Method `{self.name}` from class `{self.owner.__name__}` is mocked when {env_name}={env_value},
+                    and will raise errors if called without using an `Expect` statement to define its mocked behavior.
+                    """
+                )
+
+            if self.is_staticmethod:
+                return staticmethod(func)
+            elif self.is_classmethod:
+                return classmethod(func)
+            return func
 
     return MockDecorator

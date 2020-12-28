@@ -64,11 +64,11 @@ class Expect(object):
         :rtype: callable object
         """
 
-        def func(*func_args, **func_kwargs):
+        def func(*args, **kwargs):
             self.mark_received()
             decorated = self.get_decoration()
             decorated = decorated.__func__ if self.is_staticmethod or self.is_classmethod else decorated
-            return decorated(*func_args, **func_kwargs)
+            return decorated(*args, **kwargs)
 
         if self.is_staticmethod:
             return staticmethod(func)
@@ -156,11 +156,11 @@ class Expect(object):
         """
         call_idx = Expect.method_h[(self.klass.__name__, self.method_name)]["performed"] - 1
         args, kwargs = Expect.method_h[(self.klass.__name__, self.method_name)]["with_args"][call_idx]
-        assert (
-            args == func_args and kwargs == func_kwargs
-        ), "<{}> method of class <{}> called with {} instead of expected {}".format(
-            self.method_name, self.klass.__name__, (func_args, func_kwargs), (args, kwargs)
-        )
+        if args != func_args or kwargs != func_kwargs:
+            raise ExpectationError(
+                f"<{self.method_name}> method of class <{self.klass.__name__}> called with {(func_args, func_kwargs)} "
+                "instead of expected {(args, kwargs)}"
+            )
 
     def with_args_decorator(self, method):
         """Decorator to check passed argument.
@@ -264,22 +264,37 @@ class Expect(object):
         Expect.method_h[(self.klass.__name__, self.method_name)]["decorators"][-1] = self.decorate()
         return self
 
-    @staticmethod
-    def init_args():
+    @classmethod
+    def set_up(cls, klass, method_name, surrogate):
         """
-        When a new key is added to `method_h`, or when the associated value is reset, initial values are used
-        as defined by this method.
+        Set up the `Expect` context and replace the method being mocked with a surrogate function.
+        This method is called at interpretation time as `mock_if` statements are being resolved, and at the end
+        of each unit test to start the next one with a clean context.
 
-        :return: `dict` of initial values for a new/reset method in Expect.method_h
-        :rtype: {str: object}
+        :param klass: class object owning the mocked method
+        :type klass: object
+        :param method_name: name of the mocked method
+        :type method_name: str
+        :param surrogate: the method to use as surrogate for the method being mocked
+        :type surrogate: callable
+
+        :return: None
         """
-        return {
+        # When called from `mock_if` decorating statement, adding classes to the list of altered objects
+        if klass.__name__ not in cls.class_h:
+            cls.class_h[klass.__name__] = klass
+
+        # Initializing the Expect context
+        cls.method_h[(klass.__name__, method_name)] = {
+            "method": surrogate,
             "expected": 0,
             "performed": 0,
             "decorators": [],
             "with_args": [],
             "return": [],
         }
+        # Substituting original methods with surrogates that raise errors if not preceded by `Expect` statements
+        setattr(klass, method_name, surrogate)
 
     @classmethod
     def tear_down(cls):
@@ -287,14 +302,12 @@ class Expect(object):
         Check for any method called less times than expected, and raise an AssertionError is any is found.
         """
         message = ""
-        for (klass, method), args in cls.method_h.items():
-            # For every mocked method, checking if we are still expecting any calls
+        for (class_name, method_name), args in cls.method_h.items():
             remain = args["expected"] - args["performed"]
             if remain > 0:
-                message += f"`{method}` method of class `{klass}` still expected to be called {remain} time(s).\n"
+                message += f"`{method_name}` from class `{class_name}` still expected to be called {remain} time(s).\n"
+            # Resetting Expect parameters and original methods
+            cls.set_up(cls.class_h[class_name], method_name, args["method"])
 
-            args.update(Expect.init_args())
-
-        # If some calls are still expected, asserting False to break test with the appropriate message
-        if message:
-            assert False, message
+        # If some calls are still expected, message is not empty, so asserting False with the appropriate message
+        assert not message, message
