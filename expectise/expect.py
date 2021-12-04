@@ -1,13 +1,7 @@
 # -*- coding: utf-8 -*-
-import difflib
-import textwrap
-
+from .diff import Diff
 from .exceptions import EnvironmentError
 from .exceptions import ExpectationError
-
-
-# Diff colors: green for additions, red for deletions, default white
-C = {"+": "\033[92m", "-": "\033[91m", ".": "\033[0m"}
 
 
 class Expect(object):
@@ -153,26 +147,6 @@ class Expect(object):
         setattr(self.klass, self.method_name, self.override_method())
         return self
 
-    @staticmethod
-    def print_diff(left, right):
-        """Build a git-style text diff string.
-
-        :param object left: first object to compare, either a tuple or a dict
-        :param object right: second object to compare, either a tuple or a dict
-
-        :return: text diff
-        :rtype: str
-        """
-        lines_diff = difflib.ndiff(str(left).split(","), str(right).split(","))
-        diff = "\n".join(
-            [
-                C.get(line[0], C["."]) + line + ("," if line[-1] not in (")", "^", " ") else "") + C["."]
-                for line in lines_diff
-                if not line.startswith("?")
-            ]
-        )
-        return textwrap.indent(diff, "    ")
-
     def assert_arguments(self, func_args, func_kwargs):
         """Asserting equality of arguments.
 
@@ -186,9 +160,9 @@ class Expect(object):
 
         msg = f"`{self.method_name}` method of `{self.klass.__name__}` called with " + "unexpected {} arguments:\n\n"
         if args != func_args:
-            raise ExpectationError(msg.format("positional") + Expect.print_diff(args, func_args))
+            raise ExpectationError(msg.format("positional") + Diff.print(args, func_args))
         if kwargs != func_kwargs:
-            raise ExpectationError(msg.format("keyword") + Expect.print_diff(kwargs, func_kwargs))
+            raise ExpectationError(msg.format("keyword") + Diff.print(kwargs, func_kwargs))
 
     def with_args_decorator(self, method):
         """Decorator to check passed argument.
