@@ -30,11 +30,11 @@ jobs:
     - name: Install Python Dependencies
       run: |
         pip install --upgrade pip setuptools
-        pip install nose==1.3.7 rednose==1.3.0
+        pip install pytest
     - name: Run Unit Tests
       env:
         ENV: test
-      run: script -e -c "nosetests -v --rednose --nologcapture --nocapture example/tests"
+      run: script -e -c "python -m pytest -v example/tests"
 
   release:
     runs-on: ubuntu-20.04
