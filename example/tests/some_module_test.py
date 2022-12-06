@@ -8,10 +8,10 @@ from expectise.exceptions import ExpectationError
 
 
 """
-In this example we inherit from a custom `MyTestCase` class, that defines a `tearDown` method in which we manage the
+In this example, we implement a Pytest fixture that defines a `tearDown` method in which we manage the
 context of our Expect objects. In particular, we resolve calls to methods that were expected (in the sense of
 described by an `Expect` statemnt) but not performed.
-The `tearDown` method of `MyTestCase` is called at the end of each unit test.
+The `tearDown` method is called at the end of each unit test.
 """
 
 
