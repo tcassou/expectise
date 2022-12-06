@@ -14,6 +14,7 @@ In particular, we resolve calls to methods that were expected (in the sense of d
 but not performed.
 """
 
+
 def test_method():
     # The `get_something` method is mocked, and without the appropriate `Expect` statement describing its expected
     # behavior in test environment, it will raise an error.

@@ -1,10 +1,9 @@
 import os
+from typing import Callable
+from typing import Type
 
 from .exceptions import EnvironmentError
 from .expect import Expect
-
-from typing import Callable
-from typing import Type
 
 
 def mock_if(env_name: str, env_value: str) -> Type:
