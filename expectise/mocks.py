@@ -86,3 +86,8 @@ def mock_if(env_name: str, env_value: str) -> Type:
             self.mock.enable()
 
     return MockDecorator
+
+
+def tear_down():
+    """Reset mocking behaviour so that further tests can be run without any interference."""
+    Expect.tear_down()

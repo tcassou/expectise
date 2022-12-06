@@ -14,7 +14,7 @@ This package is here to help with 2).
 ## Contents
 This repo contains:
 * the `expectise` module itself, under `/expectise`;
-* a dummy example of small module with its tests under `/example` with unit tests showcasing what the `expectise` package can do.
+* a dummy example of small module and its tests under `/example` with unit tests showcasing what the `expectise` package can do.
 
 ## Install
 Install from [Pypi](https://pypi.org/project/expectise/):
@@ -23,11 +23,17 @@ pip install expectise
 ```
 
 ## Running Tests with Expectise
-There are 2 ways of setting up your tests to work with `expectise`:
-1. By defining a teardown method for all your tests. See the example in [this file](https://github.com/tcassou/expectise/blob/master/example/tests/my_test_case.py), with [`nose`](https://nose.readthedocs.io/en/latest/) as a test framework. We recommend using this approach if most of your tests manipulate objects that you want to mock. [This test file](https://github.com/tcassou/expectise/blob/master/example/tests/some_file_test.py) shows a few practical examples of meaningful `Expect` statements.
-2. By using the `Expectations` context manager provided in this package. We recommend using this approach if only a few of your tests deal with functions that you want to mock. [This test file](https://github.com/tcassou/expectise/blob/master/example/tests/some_other_file_test.py) shows examples of tests defined using this approach.
 
-Regardless of the way you handle the context, you will lastly need to decorate the methods you want to mock in test environment. Simply use the `mock_if` decorator with the name and value of the environment variable you use to identify your test environment. This environment variable, say `ENV` will be checked at interpretation time: if its value matches the input, say `ENV=test`, the mocking logic will be implemented; if not, nothing in your code will be modified, and performance will stay the same since nothing will happen after interpretation!
+### Lifecycle
+There are 2 steps in the lifecycle of decoration:
+1. Set up: marking a method, so that it can be replaced by a surrogate method, and its calls intercepted;
+2. Tear down: resetting the mocking behaviour so that all unit tests are fully independent and don't interfere with each other. During that step, some infractions can be caught too, such as not having called a method that was supposed to be called.
+
+### Set Up
+Methods can be marked as mocked in 2 different ways, that are described below.
+
+1. Method 1: using the `mock_if` decorator, along with the name and value of the environment variable you use to identify your test environment.
+This environment variable, say `ENV` will be checked at interpretation time: if its value matches the input, say `ENV=test`, the mocking logic will be implemented; if not, nothing in your code will be modified, and performance will stay the same since nothing will happen passed interpretation.
 
 Example of decoration:
 ```python
@@ -44,7 +50,58 @@ class MyObject:
     ...
 ```
 
-## Examples
+This method is concise, explicit and transparent: you can identify mocked candidates at a glance, and your tests can remain light without any heavy setup logic. However, it means patching production code, and carrying a dependency on this package in your production environment, which may be seen as a deal breaker from an isolation of concerns perspective.
+
+2. Method 2: using explicit `mock` statements when setting up your tests.
+Before running individual tests, mocks can be injected explicitly as part of any piece of custom logic, typically through fixtures if you're familiar with `pytest` (you'll find examples in `examples/tests/`).
+
+Example of statement:
+```python
+import pytest
+from expectise import mock
+
+
+@pytest.fixture(autouse=True)
+def run_around_tests():
+    mock(SomeObject, SomeObject.some_method, "ENV", "test")
+    yield
+    # see next section for more details on tear down actions
+```
+
+This method is a little bit heavier, and may require more maintenance when mocked objects are modified. However, it keeps a clear separation of concerns with production code that is not patched and does not have to depend on this package.
+
+### Tear Down
+Once a test has run, underlying `expectise` objects have to be reset so that 1) some final checks can happen, and 2) new tests can be run with no undesirable side effects from previous tests. Again, there are 2 ways of performing the necessary tear down actions, described below.
+
+1. Method 1: using the `Expectations` context manager provided in this package. We recommend using this approach if only a few of your tests deal with functions that you want to mock. Toy example:
+
+```python
+from expectise import Expect
+
+
+def test_instance_method():
+    with Expectations():
+        Expect("SomeAPI").to_receive("update_attribute").and_return("sshhhh")
+        ...
+        assert SomeAPI().update_attribute("secret_value") == "sshhhh"
+```
+
+2. Method 2: by performing a teardown method for all your tests. We recommend using this approach if most of your tests manipulate objects that you want to mock. Reusing the `pytest` fixtures example from the previous section:
+
+```python
+import pytest
+from expectise import mock
+from expectise import tear_down
+
+
+@pytest.fixture(autouse=True)
+def run_around_tests():
+    mock(SomeObject, SomeObject.some_method, "ENV", "test")
+    yield
+    tear_down()
+```
+
+## Mocking Examples
 The following use cases are covered:
 * asserting that a method is called (the right number of times),
 * checking the arguments passed to a method,

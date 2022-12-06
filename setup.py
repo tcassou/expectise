@@ -2,7 +2,7 @@
 from distutils.core import setup
 
 
-version = "1.0.4"
+version = "1.1.0"
 name = "expectise"
 
 setup(

@@ -5,6 +5,7 @@ from some_module.some_other_api import SomeOtherAPI
 
 from expectise import Expect
 from expectise import mock
+from expectise import tear_down
 from expectise.exceptions import EnvironmentError
 from expectise.exceptions import ExpectationError
 
@@ -25,7 +26,7 @@ def run_around_tests():
     # A test function will be run at this point
     yield
     # Tear down code that will run after each test
-    Expect.tear_down()
+    tear_down()
 
 
 def test_fixture_mock():
