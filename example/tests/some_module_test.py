@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 import pytest
 from some_module.some_api import SomeAPI
+from some_module.some_other_api import SomeOtherAPI
 
 from expectise import Expect
+from expectise import mock
 from expectise.exceptions import EnvironmentError
 from expectise.exceptions import ExpectationError
 
@@ -17,12 +19,23 @@ The `tearDown` method is called at the end of each unit test.
 
 @pytest.fixture(autouse=True)
 def run_around_tests():
-    # You can insert code that will run before each test here
-
+    # You can insert code that will run before each test here, for example mocking a specific method
+    # no preceded by a mock_if decorator
+    mock(SomeOtherAPI, SomeOtherAPI.do_advanced_stuff, "ENV", "test")
     # A test function will be run at this point
     yield
     # Tear down code that will run after each test
     Expect.tear_down()
+
+
+def test_fixture_mock():
+    # In this example, mocking happens inside a pytest fixture, that will perform some actions before and after each
+    # test is executed. This is one way of mocking methods, that has the benefit of not interfering with "production"
+    # code at all. On the other hand, it requires explicit imports and references, while `mock_if` decorators (see
+    # below examples) are explicit and concise.
+    Expect("SomeOtherAPI").to_receive("do_advanced_stuff").with_args("bar").and_return("it works!")
+    api = SomeOtherAPI()
+    assert api.do_advanced_stuff("bar") == "it works!"
 
 
 def test_method():

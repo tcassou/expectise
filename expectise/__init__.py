@@ -1,3 +1,5 @@
-from .expect import Expect  # noqa: F401
-from .expectations import Expectations  # noqa: F401
-from .mock_if import mock_if  # noqa: F401
+# flake8: noqa
+from .expect import Expect
+from .expectations import Expectations
+from .mocks import mock
+from .mocks import mock_if
