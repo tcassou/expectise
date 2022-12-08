@@ -82,8 +82,6 @@ class Expect(object):
             if self.is_classmethod or self.is_staticmethod:
                 decorated = decorated.__func__
             elif self.is_property:
-                print(self.method)
-                print(decorated)
                 decorated = decorated.fget
             return decorated(*args, **kwargs)
 
