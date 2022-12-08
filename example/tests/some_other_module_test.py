@@ -105,3 +105,10 @@ def test_instance_method():
     with Expectations():
         Expect("SomeAPI").to_receive("update_attribute").and_return("sshhhh")
         assert SomeAPI().update_attribute("secret_value") == "sshhhh"
+
+
+def test_property():
+    # Everything works with properties
+    with Expectations():
+        Expect("SomeAPI").to_receive("some_property").and_return("bar")
+        assert SomeAPI().some_property == "bar"

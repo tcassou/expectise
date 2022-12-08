@@ -23,6 +23,7 @@ def run_around_tests():
     # You can insert code that will run before each test here, for example mocking a specific method
     # no preceded by a mock_if decorator
     mock(SomeOtherAPI, SomeOtherAPI.do_advanced_stuff, "ENV", "test")
+    mock(SomeOtherAPI, SomeOtherAPI.secret_info, "ENV", "test")
     # A test function will be run at this point
     yield
     # Tear down code that will run after each test
@@ -37,6 +38,9 @@ def test_fixture_mock():
     Expect("SomeOtherAPI").to_receive("do_advanced_stuff").with_args("bar").and_return("it works!")
     api = SomeOtherAPI()
     assert api.do_advanced_stuff("bar") == "it works!"
+
+    Expect("SomeOtherAPI").to_receive("secret_info").and_return("********")
+    assert api.secret_info == "********"
 
 
 def test_method():
@@ -120,3 +124,9 @@ def test_instance_method():
     # Everything works with instance methods
     Expect("SomeAPI").to_receive("update_attribute").and_return("sshhhh")
     assert SomeAPI().update_attribute("secret_value") == "sshhhh"
+
+
+def test_property():
+    # Everything works with properties
+    Expect("SomeAPI").to_receive("some_property").and_return("bar")
+    assert SomeAPI().some_property == "bar"

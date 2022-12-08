@@ -23,3 +23,8 @@ class SomeAPI:
     @mock_if("ENV", "test")
     def update_attribute(self, value):
         setattr(self, "my_attribute", value)
+
+    @mock_if("ENV", "test")
+    @property
+    def some_property(self):
+        return "foo"

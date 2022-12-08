@@ -47,8 +47,23 @@ class Expect(object):
         self.method = None
         self.is_classmethod = False
         self.is_staticmethod = False
-        self.decorator_names = ["raise", "return", "with_args", "classmethod", "staticmethod"]  # Order matters!
+        self.is_property = False
+        # The order of decorators matters!
+        self.decorator_names = ["raise", "return", "with_args", "classmethod", "staticmethod", "property"]
         self.decorators = {decorator_name: None for decorator_name in self.decorator_names}
+
+    def set_method(self, method):
+        """Set the method attribute to capture the decorated method, once known thanks to a `to_receive` call."""
+        self.method = method
+        if isinstance(method, classmethod):
+            self.decorators["classmethod"] = classmethod
+            self.is_classmethod = True
+        if isinstance(method, staticmethod):
+            self.decorators["staticmethod"] = staticmethod
+            self.is_staticmethod = True
+        if isinstance(method, property):
+            self.decorators["property"] = property
+            self.is_property = True
 
     def get_decoration(self) -> Callable:
         """Get the right decoration of the original method, depending on the number of calls already performed."""
@@ -64,28 +79,30 @@ class Expect(object):
         def func(*args, **kwargs):
             self.mark_received()
             decorated = self.get_decoration()
-            decorated = decorated.__func__ if self.is_staticmethod or self.is_classmethod else decorated
+            if self.is_classmethod or self.is_staticmethod:
+                decorated = decorated.__func__
+            elif self.is_property:
+                print(self.method)
+                print(decorated)
+                decorated = decorated.fget
             return decorated(*args, **kwargs)
 
         if self.is_staticmethod:
             return staticmethod(func)
         elif self.is_classmethod:
             return classmethod(func)
+        elif self.is_property:
+            return property(func)
         return func
-
-    def is_decorated(self, method: Callable) -> bool:
-        """Checking for existing decorators around the target method: classmethod or staticmethod."""
-        if isinstance(method, classmethod):
-            self.decorators["classmethod"] = classmethod
-            self.is_classmethod = True
-        if isinstance(method, staticmethod):
-            self.decorators["staticmethod"] = staticmethod
-            self.is_staticmethod = True
-        return self.is_classmethod or self.is_staticmethod
 
     def decorate(self) -> Callable:
         """Iteratively apply active decorators to the target method."""
-        method = self.method.__func__ if self.is_decorated(self.method) else self.method
+        method = self.method
+        if self.is_classmethod or self.is_staticmethod:
+            method = method.__func__
+        elif self.is_property:
+            method = method.fget
+
         for decorator_name in self.decorator_names:
             decorator = self.decorators[decorator_name]
             method = decorator(method) if decorator else method
@@ -107,7 +124,7 @@ class Expect(object):
         """Decorate the mocked method to check that it is called."""
         key = (self.klass.__name__, method_name)
         self.method_name = method_name
-        self.method = Expect.method_h[key]["method"]
+        self.set_method(Expect.method_h[key]["method"])
         if key not in Expect.method_h:
             raise EnvironmentError(
                 f"""

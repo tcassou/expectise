@@ -14,9 +14,18 @@ class Mock:
         self.method = method
         self.is_classmethod = isinstance(method, classmethod)
         self.is_staticmethod = isinstance(method, staticmethod)
-        self.name = method.__func__.__name__ if self.is_classmethod or self.is_staticmethod else method.__name__
+        self.is_property = isinstance(method, property)
         self.env_name = env_name
         self.env_value = env_value
+
+    @property
+    def name(self) -> str:
+        """Return the mocked method name, depending on the type of method mocked."""
+        if self.is_classmethod or self.is_staticmethod:
+            return self.method.__func__.__name__
+        if self.is_property:
+            return self.method.fget.__name__
+        return self.method.__name__
 
     @property
     def surrogate(self):
@@ -34,6 +43,8 @@ class Mock:
             return classmethod(func)
         if self.is_staticmethod:
             return staticmethod(func)
+        if self.is_property:
+            return property(func)
         return func
 
     def disable(self):
