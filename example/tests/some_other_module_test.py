@@ -112,3 +112,14 @@ def test_property():
     with Expectations():
         Expect("SomeAPI").to_receive("some_property").and_return("bar")
         assert SomeAPI().some_property == "bar"
+
+
+def test_disable():
+    # Trying to disable a mock
+    with Expectations():
+        some_api = SomeAPI()
+
+        # Disabling the mock should allow setting the property
+        Expect.disable_mock("SomeAPI", "update_attribute")
+        some_api.update_attribute("new_value")
+        assert some_api.my_attribute == "new_value"

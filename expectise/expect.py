@@ -6,10 +6,15 @@ from typing import Callable
 from typing import Dict
 from typing import List
 from typing import Type
+from typing import TYPE_CHECKING
 
 from .diff import Diff
 from .exceptions import EnvironmentError
 from .exceptions import ExpectationError
+
+if TYPE_CHECKING:
+    # Prevent circular dependency
+    from .mocks import Mock
 
 
 class Expect(object):
@@ -215,7 +220,7 @@ class Expect(object):
         return self
 
     @classmethod
-    def set_up(cls, klass: Type, method_name: str, surrogate: Callable) -> None:
+    def set_up(cls, klass: Type, method_name: str, surrogate: Callable, mock_ref: Mock) -> None:
         """
         Set up the `Expect` context and replace the method being mocked with a surrogate function.
         This method is called at interpretation time when `@mock_if` decorators are being resolved, when explictly
@@ -233,9 +238,23 @@ class Expect(object):
             "decorators": [],
             "with_args": [],
             "return": [],
+            "mock_ref": mock_ref,
         }
         # Substituting original methods with surrogates that raise errors if not preceded by `Expect` statements
         setattr(klass, method_name, surrogate)
+
+    @classmethod
+    def disable_mock(cls, class_name: str, method_name: str) -> None:
+        """Disables a Mock."""
+        if (class_name, method_name) in cls.method_h:
+            cls.method_h[(class_name, method_name)]["mock_ref"].disable()
+        else:
+            raise ValueError(
+                """
+                Method `{method_name}` from class `{class_name}` is not mocked, or does not exist.
+                Calling disable_mock has no effect.
+            """
+            )
 
     @classmethod
     def tear_down(cls) -> None:
@@ -245,8 +264,9 @@ class Expect(object):
             remain = args["expected"] - args["performed"]
             if remain > 0:
                 message += f"`{method_name}` from class `{class_name}` still expected to be called {remain} time(s).\n"
-            # Resetting Expect parameters and original methods
-            cls.set_up(cls.class_h[class_name], method_name, args["method"])
+            # Resetting Expect parameters and original methods, keeping the reference to the Mock object
+            curr_mock_ref = cls.method_h[(class_name, method_name)]["mock_ref"]
+            cls.set_up(cls.class_h[class_name], method_name, args["method"], curr_mock_ref)
 
         # If some calls are still expected, message is not empty, so asserting False with the appropriate message
         assert not message, message
