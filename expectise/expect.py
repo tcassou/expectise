@@ -5,7 +5,6 @@ from typing import Any
 from typing import Callable
 from typing import Dict
 from typing import List
-from typing import Type
 from typing import TYPE_CHECKING
 
 from .diff import Diff
@@ -127,7 +126,7 @@ class Expect(object):
         """Decorate the mocked method to check that it is called."""
         key = (self.klass.__name__, method_name)
         self.method_name = method_name
-        self.set_method(Expect.method_h[key]["method"])
+        self.set_method(Expect.method_h[key]["mock"].surrogate)
         if key not in Expect.method_h:
             raise EnvironmentError(
                 f"""
@@ -220,41 +219,40 @@ class Expect(object):
         return self
 
     @classmethod
-    def set_up(cls, klass: Type, method_name: str, surrogate: Callable, mock_ref: Mock) -> None:
+    def set_up(cls, mock: Mock) -> None:
         """
         Set up the `Expect` context and replace the method being mocked with a surrogate function.
-        This method is called at interpretation time when `@mock_if` decorators are being resolved, when explictly
+        This method is called at interpretation time when `@mock_if` decorators are being resolved, when explicitly
         performing mock(...) statements, and at the end of each unit test to start the next one with a clean context.
         """
         # When called from `mock_if` decorating statement, adding classes to the list of altered objects
-        if klass.__name__ not in cls.class_h:
-            cls.class_h[klass.__name__] = klass
+        if mock.klass.__name__ not in cls.class_h:
+            cls.class_h[mock.klass.__name__] = mock.klass
 
         # Initializing the Expect context
-        cls.method_h[(klass.__name__, method_name)] = {
-            "method": surrogate,
+        cls.method_h[(mock.klass.__name__, mock.name)] = {
             "expected": 0,
             "performed": 0,
             "decorators": [],
             "with_args": [],
             "return": [],
-            "mock_ref": mock_ref,
+            "mock": mock,
         }
         # Substituting original methods with surrogates that raise errors if not preceded by `Expect` statements
-        setattr(klass, method_name, surrogate)
+        setattr(mock.klass, mock.name, mock.surrogate)
 
     @classmethod
     def disable_mock(cls, class_name: str, method_name: str) -> None:
         """Disables a Mock."""
-        if (class_name, method_name) in cls.method_h:
-            cls.method_h[(class_name, method_name)]["mock_ref"].disable()
-        else:
+        if not (class_name, method_name) in cls.method_h:
             raise ValueError(
                 """
                 Method `{method_name}` from class `{class_name}` is not mocked, or does not exist.
                 Calling disable_mock has no effect.
-            """
+                """
             )
+
+        cls.method_h[(class_name, method_name)]["mock"].disable()
 
     @classmethod
     def tear_down(cls) -> None:
@@ -265,8 +263,8 @@ class Expect(object):
             if remain > 0:
                 message += f"`{method_name}` from class `{class_name}` still expected to be called {remain} time(s).\n"
             # Resetting Expect parameters and original methods, keeping the reference to the Mock object
-            curr_mock_ref = cls.method_h[(class_name, method_name)]["mock_ref"]
-            cls.set_up(cls.class_h[class_name], method_name, args["method"], curr_mock_ref)
+            curr_mock = cls.method_h[(class_name, method_name)]["mock"]
+            cls.set_up(curr_mock)
 
         # If some calls are still expected, message is not empty, so asserting False with the appropriate message
         assert not message, message
