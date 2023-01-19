@@ -53,7 +53,7 @@ class Mock:
 
     def enable(self):
         """Replace the mocked method with its surrogate."""
-        Expect.set_up(self.klass, self.name, self.surrogate)
+        Expect.set_up(self)
 
 
 def mock(klass: Type, method: Callable, env_name: str, env_value: str) -> None:

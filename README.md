@@ -100,6 +100,10 @@ def run_around_tests():
     yield
     tear_down()
 ```
+### Manually Disabling a Mock
+
+Sometimes it can be useful to manually disable a mock - for example, to write a test for a method decorated with `mock_if`.
+To achieve this, simply call `Expect.disable_mock("<class name>", "<method name>")`
 
 ## Mocking Examples
 The following use cases are covered:

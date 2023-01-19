@@ -13,7 +13,7 @@ from expectise.exceptions import ExpectationError
 """
 In this example, we implement a Pytest fixture that defines a `tearDown` method in which we manage the
 context of our Expect objects. In particular, we resolve calls to methods that were expected (in the sense of
-described by an `Expect` statemnt) but not performed.
+described by an `Expect` statement) but not performed.
 The `tearDown` method is called at the end of each unit test.
 """
 
@@ -130,3 +130,22 @@ def test_property():
     # Everything works with properties
     Expect("SomeAPI").to_receive("some_property").and_return("bar")
     assert SomeAPI().some_property == "bar"
+
+
+def test_disable():
+    # Trying to disable a non-existing Mock
+    with pytest.raises(ValueError):
+        Expect.disable_mock("SomeAPI", "non_mocked_method")
+
+    some_api = SomeAPI()
+
+    # Disabling the mock should allow setting the property
+    Expect.disable_mock("SomeAPI", "update_attribute")
+    some_api.update_attribute("new_value")
+    assert some_api.my_attribute == "new_value"
+
+    # Same for some other API
+    Expect.disable_mock("SomeOtherAPI", "do_advanced_stuff")
+    some_other_api = SomeOtherAPI(foo=5)
+    val = some_other_api.do_advanced_stuff(bar="high")
+    assert val == "high>>5"
