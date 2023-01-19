@@ -263,8 +263,7 @@ class Expect(object):
             if remain > 0:
                 message += f"`{method_name}` from class `{class_name}` still expected to be called {remain} time(s).\n"
             # Resetting Expect parameters and original methods, keeping the reference to the Mock object
-            curr_mock = cls.method_h[(class_name, method_name)]["mock"]
-            cls.set_up(curr_mock)
+            cls.set_up(cls.method_h[(class_name, method_name)]["mock"])
 
         # If some calls are still expected, message is not empty, so asserting False with the appropriate message
         assert not message, message
