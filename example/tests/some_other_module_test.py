@@ -138,3 +138,18 @@ def test_tear_down_disables_temporary_mocks():
         assert some_api.unmocked_method() == "mocked"
 
     assert some_api.unmocked_method() == "unmocked"
+
+
+def test_tear_down_keeps_permanent_mocks():
+    # This test ensures that permanent mocks (i.e. those
+    # created with mock_if - wen in the test environment)
+    # are not removed by tear_down
+    with Expectations():
+        some_api = SomeAPI()
+
+        Expect("SomeAPI").to_receive("mocked_method").and_return("mocked")
+
+        assert some_api.mocked_method() == "mocked"
+
+    with pytest.raises(EnvironmentError):
+        some_api.mocked_method()
