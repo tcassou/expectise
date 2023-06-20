@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
+from enum import Enum
 from typing import Any
 from typing import Callable
 from typing import Dict
@@ -11,9 +12,15 @@ from .diff import Diff
 from .exceptions import EnvironmentError
 from .exceptions import ExpectationError
 
+
 if TYPE_CHECKING:
     # Prevent circular dependency
     from .mocks import Mock
+
+
+class Lifespan(Enum):
+    PERMANENT = "PERMANENT"
+    TEMPORARY = "TEMPORARY"
 
 
 class Expect(object):
@@ -258,12 +265,24 @@ class Expect(object):
     def tear_down(cls) -> None:
         """Check for any method called less times than expected, and raise an AssertionError is any is found."""
         message = ""
-        for (class_name, method_name), args in cls.method_h.items():
+        for key, args in cls.method_h.items():
+            (class_name, method_name) = key
             remain = args["expected"] - args["performed"]
             if remain > 0:
                 message += f"`{method_name}` from class `{class_name}` still expected to be called {remain} time(s).\n"
-            # Resetting Expect parameters and original methods, keeping the reference to the Mock object
-            cls.set_up(cls.method_h[(class_name, method_name)]["mock"])
+            # Resetting Expect parameters and original methods, keeping the reference to the Mock object,
+            # if it's a permanent mock (e.g.: set with the mock_if decorator)
+            mock = cls.method_h[key]["mock"]
+            temporary_mocks = []
+            if mock.lifespan is Lifespan.PERMANENT:
+                cls.set_up(mock)
+            elif mock.lifespan is Lifespan.TEMPORARY:
+                mock.disable()
+                temporary_mocks.append(key)
+
+        # Fully removing all references to temporary mocks
+        for key in temporary_mocks:
+            cls.method_h.pop(key)
 
         # If some calls are still expected, message is not empty, so asserting False with the appropriate message
         assert not message, message
