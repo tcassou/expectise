@@ -4,12 +4,13 @@ from typing import Type
 
 from .exceptions import EnvironmentError
 from .expect import Expect
+from .expect import Lifespan
 
 
 class Mock:
     """Represent a mocked method and its behaviour depending on the environment context."""
 
-    def __init__(self, klass: Type, method: Callable, env_name: str, env_value: str) -> None:
+    def __init__(self, klass: Type, method: Callable, env_name: str, env_value: str, lifespan: Lifespan) -> None:
         self.klass = klass
         self.method = method
         self.is_classmethod = isinstance(method, classmethod)
@@ -17,6 +18,7 @@ class Mock:
         self.is_property = isinstance(method, property)
         self.env_name = env_name
         self.env_value = env_value
+        self.lifespan = lifespan
 
     @property
     def name(self) -> str:
@@ -58,7 +60,7 @@ class Mock:
 
 def mock(klass: Type, method: Callable, env_name: str, env_value: str) -> None:
     """Enable mocking of an object method by replacing it with a surrogate, requiring subsequent `Expect` statements."""
-    Mock(klass, method, env_name, env_value).enable()
+    Mock(klass, method, env_name, env_value, lifespan=Lifespan.TEMPORARY).enable()
 
 
 def mock_if(env_name: str, env_value: str) -> Type:
@@ -78,7 +80,7 @@ def mock_if(env_name: str, env_value: str) -> Type:
             * if the environment conditions are met, the method is marked as to be mocked for later calls
             * if not, the method is left unchanged.
             """
-            self.mock = Mock(None, method, env_name, env_value)
+            self.mock = Mock(None, method, env_name, env_value, lifespan=Lifespan.PERMANENT)
 
         def __set_name__(self, owner: Type, name: str) -> None:
             """

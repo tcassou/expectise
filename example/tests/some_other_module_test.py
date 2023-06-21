@@ -4,6 +4,7 @@ from some_module.some_api import SomeAPI
 
 from expectise import Expect
 from expectise import Expectations
+from expectise import mock
 from expectise.exceptions import EnvironmentError
 from expectise.exceptions import ExpectationError
 
@@ -123,3 +124,32 @@ def test_disable():
         Expect.disable_mock("SomeAPI", "update_attribute")
         some_api.update_attribute("new_value")
         assert some_api.my_attribute == "new_value"
+
+
+def test_tear_down_disables_temporary_mocks():
+    # This test ensures that calling mock(...) and then
+    # tearing down (by exiting the context manager)
+    # fully removes the Mock and does not impact future tests
+    with Expectations():
+        some_api = SomeAPI()
+        mock(SomeAPI, SomeAPI.unmocked_method, "ENV", "test")
+        Expect("SomeAPI").to_receive("unmocked_method").and_return("mocked")
+
+        assert some_api.unmocked_method() == "mocked"
+
+    assert some_api.unmocked_method() == "unmocked"
+
+
+def test_tear_down_keeps_permanent_mocks():
+    # This test ensures that permanent mocks (i.e. those
+    # created with mock_if - wen in the test environment)
+    # are not removed by tear_down
+    with Expectations():
+        some_api = SomeAPI()
+
+        Expect("SomeAPI").to_receive("mocked_method").and_return("mocked")
+
+        assert some_api.mocked_method() == "mocked"
+
+    with pytest.raises(EnvironmentError):
+        some_api.mocked_method()

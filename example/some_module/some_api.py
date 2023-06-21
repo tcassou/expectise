@@ -28,3 +28,10 @@ class SomeAPI:
     @property
     def some_property(self):
         return "foo"
+
+    @mock_if("ENV", "test")
+    def mocked_method(self):
+        return "mocked"
+
+    def unmocked_method(self):
+        return "unmocked"
