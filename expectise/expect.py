@@ -265,6 +265,7 @@ class Expect(object):
     def tear_down(cls) -> None:
         """Check for any method called less times than expected, and raise an AssertionError is any is found."""
         message = ""
+        temporary_mocks = []
         for key, args in cls.method_h.items():
             (class_name, method_name) = key
             remain = args["expected"] - args["performed"]
@@ -273,7 +274,7 @@ class Expect(object):
             # Resetting Expect parameters and original methods, keeping the reference to the Mock object,
             # if it's a permanent mock (e.g.: set with the mock_if decorator)
             mock = cls.method_h[key]["mock"]
-            temporary_mocks = []
+
             if mock.lifespan is Lifespan.PERMANENT:
                 cls.set_up(mock)
             elif mock.lifespan is Lifespan.TEMPORARY:
