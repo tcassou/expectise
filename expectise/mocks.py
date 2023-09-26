@@ -102,5 +102,5 @@ def mock_if(env_name: str, env_value: str) -> Type:
 
 
 def tear_down():
-    """Reset mocking behaviour so that further tests can be run without any interference."""
+    """Reset mocking behavior so that further tests can be run without any interference."""
     Expect.tear_down()

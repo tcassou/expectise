@@ -6,6 +6,7 @@ from typing import Any
 from typing import Callable
 from typing import Dict
 from typing import List
+from typing import Optional
 from typing import TYPE_CHECKING
 
 from .diff import Diff
@@ -262,7 +263,7 @@ class Expect(object):
         cls.method_h[(class_name, method_name)]["mock"].disable()
 
     @classmethod
-    def tear_down(cls) -> None:
+    def tear_down(cls, execution_error: Optional[Exception] = None) -> None:
         """Check for any method called less times than expected, and raise an AssertionError is any is found."""
         message = ""
         temporary_mocks = []
@@ -284,6 +285,10 @@ class Expect(object):
         # Fully removing all references to temporary mocks
         for key in temporary_mocks:
             cls.method_h.pop(key)
+
+        # In case an exception was raised during the test, raising it again
+        if execution_error:
+            raise execution_error
 
         # If some calls are still expected, message is not empty, so asserting False with the appropriate message
         assert not message, message

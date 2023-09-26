@@ -10,5 +10,5 @@ class Expectations:
     def __enter__(self):
         pass
 
-    def __exit__(self, type, value, traceback):
-        Expect.tear_down()
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        Expect.tear_down(exc_val)
