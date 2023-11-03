@@ -1,3 +1,36 @@
+[tool.poetry]
+name = "expectise"
+version = "0.0.0" # Placeholder, not used as versions are managed in the CICD
+description = "Mocking API and function calls in Python - inspired by Ruby's RSpec-Mocks."
+authors = ["tcassou"]
+readme = "README.md"
+homepage = "https://github.com/tcassou/expectise"
+repository = "https://github.com/tcassou/expectise"
+
+keywords = ["python", "testing", "mocking", "unit", "tests"]
+classifiers = [
+  "Intended Audience :: Developers",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.8",
+  "Topic :: Software Development :: Testing",
+  "Topic :: Software Development :: Testing :: Mocking",
+]
+
+packages = [
+  { include = "expectise" },
+]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.0"
+pytest = "^7.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.black]
 line-length = 120
 include = '\.pyi?$'
@@ -14,3 +47,15 @@ exclude = '''
   | dist
 )/
 '''
+
+[tool.pylic]
+safe_licenses = [
+  "Apache Software License",
+  "BSD License",
+  "ISC License (ISCL)",
+  "MIT License",
+  "Mozilla Public License 2.0 (MPL 2.0)",
+  "Python Software Foundation License",
+  "The Unlicense (Unlicense)",
+]
+unsafe_packages = []

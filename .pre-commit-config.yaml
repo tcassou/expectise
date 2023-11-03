@@ -1,27 +1,47 @@
 default_language_version:
-    python: python3.9
+  python: python3.9
 repos:
--   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.3.0
+  - repo: https://github.com/myint/autoflake
+    rev: v2.2.0
     hooks:
-    -   id: check-yaml
-    -   id: end-of-file-fixer
-    -   id: trailing-whitespace
-    -   id: flake8
-    -   id: debug-statements
-    -   id: check-added-large-files
-    -   id: pretty-format-json
+      - id: autoflake
+        name: Autoflake removes unused imports
         args:
-        - --autofix
-        - --indent=2
-        - --no-ensure-ascii
-        - --no-sort-keys
--   repo: https://github.com/asottile/reorder_python_imports.git
-    rev: v3.9.0
+          [
+            '--in-place',
+            '--remove-all-unused-imports',
+            '--ignore-init-module-imports',
+          ]
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
     hooks:
-    -   id: reorder-python-imports
--   repo: https://github.com/psf/black
-    rev: 22.10.0
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: debug-statements
+      - id: check-added-large-files
+      - id: pretty-format-json
+        args:
+          - --autofix
+          - --indent=2
+          - --no-ensure-ascii
+          - --no-sort-keys
+  - repo: https://github.com/asottile/reorder_python_imports.git
+    rev: v3.10.0
     hooks:
-    -   id: black
-        language_version: python3.9
+      - id: reorder-python-imports
+  - repo: https://github.com/psf/black
+    rev: 23.7.0
+    hooks:
+      - id: black
+        name: Black
+  - repo: https://github.com/pycqa/flake8
+    rev: 6.1.0
+    hooks:
+      - id: flake8
+        name: Flake8
+  - repo: https://github.com/ubersan/pylic
+    rev: v3.5.0
+    hooks:
+      - id: pylic
+        args: [--allow-extra-safe-licenses]
