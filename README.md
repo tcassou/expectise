@@ -132,3 +132,16 @@ Expect('MyObject').to_receive('my_method').with_args(*my_args_3, **my_kwargs_3).
 
 Note that if a method decorated at least once with an `Expect` statement is called more or less times than the number
 of Expect statements, the unit test will fail.
+
+# Contributing
+## Local Setup
+We recommend [using `asdf` for managing high level dependencies](https://asdf-vm.com/).
+With `asdf` installed,
+1. simply run `asdf install` at the root of the repository,
+2. run `poetry install` to install python dependencies.
+
+## Running Tests
+```python
+poetry shell
+ENV=test python -m pytest -v examples/tests/
+```

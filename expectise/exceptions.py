@@ -5,12 +5,8 @@ class EnvironmentError(Exception):
     * not marking methods as mocked with the `mock_if` decorator.
     """
 
-    pass
-
 
 class ExpectationError(Exception):
     """
     Error describing misuses of `Expect` statements.
     """
-
-    pass
