@@ -5,7 +5,7 @@ jobs:
   lint:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Environment
         id: setup
@@ -15,7 +15,7 @@ jobs:
           if [ $GITHUB_REF == 'refs/heads/master' ]; then echo "ENV=prod"; else echo "ENV=staging"; fi >> $GITHUB_ENV
 
       - name: Install Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ steps.setup.outputs.python-version }}
 
@@ -28,7 +28,7 @@ jobs:
 
       - name: Load cached venv
         id: cached-poetry-dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .venv
           key: venv-${{ runner.os }}-${{ steps.setup.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}-${{ hashFiles('**/pyproject.toml') }}-${{ hashFiles('**/.pre-commit-config.yaml') }}
@@ -43,7 +43,7 @@ jobs:
   test:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Environment
         id: setup
@@ -53,7 +53,7 @@ jobs:
           if [ $GITHUB_REF == 'refs/heads/master' ]; then echo "ENV=prod"; else echo "ENV=staging"; fi >> $GITHUB_ENV
 
       - name: Install Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ steps.setup.outputs.python-version }}
 
@@ -66,7 +66,7 @@ jobs:
 
       - name: Load cached venv
         id: cached-poetry-dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .venv
           key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}-${{ hashFiles('**/pyproject.toml') }}-${{ hashFiles('**/.pre-commit-config.yaml') }}
@@ -85,7 +85,7 @@ jobs:
     needs: [lint, test]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Bump version and push tag
         uses: alexeyatbluescape/github-tag-action@bugfix/semver-empty-results
@@ -102,7 +102,7 @@ jobs:
           if [ $GITHUB_REF == 'refs/heads/master' ]; then echo "ENV=prod"; else echo "ENV=staging"; fi >> $GITHUB_ENV
 
       - name: Install Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ steps.setup.outputs.python-version }}
 
@@ -115,7 +115,7 @@ jobs:
 
       - name: Load cached venv
         id: cached-poetry-dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .venv
           key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}-${{ hashFiles('**/pyproject.toml') }}-${{ hashFiles('**/.pre-commit-config.yaml') }}
