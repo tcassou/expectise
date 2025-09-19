@@ -87,12 +87,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Bump version and push tag
-        uses: alexeyatbluescape/github-tag-action@bugfix/semver-empty-results
+      - name: Bump Version and Push Tag
+        id: bump-version-push-tag
+        uses: anothrNick/github-tag-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          WITH_V: true
+          WITH_V: false
           DEFAULT_BUMP: patch
+          PRERELEASE: true
 
       - name: Setup Environment
         id: setup
