@@ -43,6 +43,17 @@ def test_fixture_mock():
     assert api.secret_info == "********"
 
 
+def test_fixture_mock_by_class():
+    # This example is similar to the previous one, but uses the class itself instead of the class name as a reference.
+    # In larger projects where class names may collide, using direct references allows avoiding mock collisions.
+    Expect(SomeOtherAPI).to_receive("do_advanced_stuff").with_args("bar").and_return("it works!")
+    api = SomeOtherAPI()
+    assert api.do_advanced_stuff("bar") == "it works!"
+
+    Expect(SomeOtherAPI).to_receive("secret_info").and_return("********")
+    assert api.secret_info == "********"
+
+
 def test_method():
     # The `get_something` method is mocked, and without the appropriate `Expect` statement describing its expected
     # behavior in test environment, it will raise an error.
@@ -71,6 +82,17 @@ def test_method_called_with_args():
         SomeAPI.do_something_else(x=13)
 
 
+def test_method_called_with_args_by_class():
+    # Same test as above, but using the class itself instead of the class name as a reference.
+    Expect(SomeAPI).to_receive("do_something_else").with_args(x=12)
+    with pytest.raises(EnvironmentError):
+        SomeAPI.do_something_else(x=12)
+
+    Expect(SomeAPI).to_receive("do_something_else").with_args(x=12)
+    with pytest.raises(ExpectationError):
+        SomeAPI.do_something_else(x=13)
+
+
 def test_method_return():
     # Expecting the function `get_something` to be called, with specifc arguments passed to it, and overriding its
     # behavior to return a desired output. This test case checks that the method is called, with the right input,
@@ -82,10 +104,24 @@ def test_method_return():
     assert not SomeAPI.get_something("foo", "bar")
 
 
+def test_method_return_by_class():
+    # Same test as above, but using the class itself instead of the class name as a reference.
+    Expect(SomeAPI).to_receive("get_something").with_args("foo", "bar").and_return(False)
+    assert not SomeAPI.get_something("foo", "bar")
+
+
 def test_method_called_twice():
     # With the same setup as above, calling the same method a second time will raise an error. 2 `Expect`
     # statements are required for that.
     Expect("SomeAPI").to_receive("get_something").with_args("foo", "bar").and_return(False)
+    SomeAPI.get_something("foo", "bar")
+    with pytest.raises(ExpectationError):
+        SomeAPI.get_something("foo", "bar")
+
+
+def test_method_called_twice_by_class():
+    # Same test as above, but using the class itself instead of the class name as a reference.
+    Expect(SomeAPI).to_receive("get_something").with_args("foo", "bar").and_return(False)
     SomeAPI.get_something("foo", "bar")
     with pytest.raises(ExpectationError):
         SomeAPI.get_something("foo", "bar")
@@ -101,8 +137,21 @@ def test_method_raise():
         SomeAPI.get_something("foo", "bar")
 
 
+def test_method_raise_by_class():
+    # Same test as above, but using the class itself instead of the class name as a reference.
+    Expect(SomeAPI).to_receive("get_something").with_args("foo", "bar").and_raise(ValueError("My error"))
+    with pytest.raises(ValueError):
+        SomeAPI.get_something("foo", "bar")
+
+
 def test_method_return_only():
     # Similar example as above, with no check of arguments passed to `get_something`.
+    Expect("SomeAPI").to_receive("get_something").and_return(42)
+    assert SomeAPI.get_something("foo", "bar") == 42
+
+
+def test_method_return_only_by_class():
+    # Same test as above, but using the class itself instead of the class name as a reference.
     Expect("SomeAPI").to_receive("get_something").and_return(42)
     assert SomeAPI.get_something("foo", "bar") == 42
 
@@ -114,9 +163,22 @@ def test_method_raise_only():
         SomeAPI.get_something("python", "snake")
 
 
+def test_method_raise_only_by_class():
+    # Same test as above, but using the class itself instead of the class name as a reference.
+    Expect(SomeAPI).to_receive("get_something").and_raise(ValueError("My error"))
+    with pytest.raises(ValueError):
+        SomeAPI.get_something("python", "snake")
+
+
 def test_static_method():
     # Everything works with staticmethods
     Expect("SomeAPI").to_receive("compute_sum").with_args(1, 2).and_return(4)
+    assert SomeAPI.compute_sum(1, 2) == 4
+
+
+def test_static_method_by_class():
+    # Same test as above, but using the class itself instead of the class name as a reference.
+    Expect(SomeAPI).to_receive("compute_sum").with_args(1, 2).and_return(4)
     assert SomeAPI.compute_sum(1, 2) == 4
 
 
@@ -126,16 +188,28 @@ def test_instance_method():
     assert SomeAPI().update_attribute("secret_value") == "sshhhh"
 
 
+def test_instance_method_by_class():
+    # Same test as above, but using the class itself instead of the class name as a reference.
+    Expect(SomeAPI).to_receive("update_attribute").and_return("sshhhh")
+    assert SomeAPI().update_attribute("secret_value") == "sshhhh"
+
+
 def test_property():
     # Everything works with properties
     Expect("SomeAPI").to_receive("some_property").and_return("bar")
     assert SomeAPI().some_property == "bar"
 
 
+def test_property_by_class():
+    # Same test as above, but using the class itself instead of the class name as a reference.
+    Expect(SomeAPI).to_receive("some_property").and_return("bar")
+    assert SomeAPI().some_property == "bar"
+
+
 def test_disable():
     # Trying to disable a non-existing Mock
     with pytest.raises(ValueError):
-        Expect.disable_mock("SomeAPI", "non_mocked_method")
+        Expect.disable_mock("SomeAPI", "unmocked_method")
 
     some_api = SomeAPI()
 
@@ -146,6 +220,25 @@ def test_disable():
 
     # Same for some other API
     Expect.disable_mock("SomeOtherAPI", "do_advanced_stuff")
+    some_other_api = SomeOtherAPI(foo=5)
+    val = some_other_api.do_advanced_stuff(bar="high")
+    assert val == "high>>5"
+
+
+def test_disable_by_class():
+    # Trying to disable a non-existing Mock
+    with pytest.raises(ValueError):
+        Expect.disable_mock(SomeAPI, "unmocked_method")
+
+    some_api = SomeAPI()
+
+    # Disabling the mock should allow setting the property
+    Expect.disable_mock(SomeAPI, "update_attribute")
+    some_api.update_attribute("new_value")
+    assert some_api.my_attribute == "new_value"
+
+    # Same for some other API
+    Expect.disable_mock(SomeOtherAPI, "do_advanced_stuff")
     some_other_api = SomeOtherAPI(foo=5)
     val = some_other_api.do_advanced_stuff(bar="high")
     assert val == "high>>5"

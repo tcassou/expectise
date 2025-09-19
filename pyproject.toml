@@ -11,7 +11,6 @@ keywords = ["python", "testing", "mocking", "unit", "tests"]
 classifiers = [
   "Intended Audience :: Developers",
   "Programming Language :: Python",
-  "Programming Language :: Python :: 3.8",
   "Topic :: Software Development :: Testing",
   "Topic :: Software Development :: Testing :: Mocking",
 ]
@@ -21,11 +20,11 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.10"
 
 [tool.poetry.group.dev.dependencies]
-pre-commit = "^3.0"
-pytest = "^7.1"
+pre-commit = "^4.0"
+pytest = "^8.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -50,12 +49,13 @@ exclude = '''
 
 [tool.pylic]
 safe_licenses = [
-  "Apache Software License",
+  "Apache-2.0",
   "BSD License",
+  "BSD-2-Clause",
+  "BSD-3-Clause",
   "ISC License (ISCL)",
+  "MIT",
   "MIT License",
-  "Mozilla Public License 2.0 (MPL 2.0)",
-  "Python Software Foundation License",
-  "The Unlicense (Unlicense)",
+  "PSF-2.0",
 ]
 unsafe_packages = []

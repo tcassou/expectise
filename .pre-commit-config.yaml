@@ -1,5 +1,5 @@
 default_language_version:
-  python: python3.9
+  python: python3.10
 repos:
   - repo: https://github.com/myint/autoflake
     rev: v2.3.1
@@ -13,7 +13,7 @@ repos:
             '--ignore-init-module-imports',
           ]
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v6.0.0
     hooks:
       - id: check-yaml
       - id: end-of-file-fixer
@@ -27,21 +27,21 @@ repos:
           - --no-ensure-ascii
           - --no-sort-keys
   - repo: https://github.com/asottile/reorder_python_imports.git
-    rev: v3.13.0
+    rev: v3.15.0
     hooks:
       - id: reorder-python-imports
   - repo: https://github.com/psf/black
-    rev: 24.8.0
+    rev: 25.9.0
     hooks:
       - id: black
         name: Black
   - repo: https://github.com/pycqa/flake8
-    rev: 7.1.1
+    rev: 7.3.0
     hooks:
       - id: flake8
         name: Flake8
   - repo: https://github.com/ubersan/pylic
-    rev: v3.6.1
+    rev: v5.0.1
     hooks:
       - id: pylic
         args: [--allow-extra-safe-licenses]

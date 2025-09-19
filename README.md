@@ -9,7 +9,7 @@ In that scenario, there are (at least) 2 options:
 1. not testing such modules or objects to avoid performing external calls (that would fail anyway - ideally),
 2. mocking external calls in order to test their surrounding logic, and increase the coverage of tests as much as possible.
 
-This package is here to help with 2).
+This package is here to help with (2).
 
 ## Contents
 This repo contains:
@@ -32,8 +32,8 @@ There are 2 steps in the lifecycle of decoration:
 ### Set Up
 Methods can be marked as mocked in 2 different ways, that are described below.
 
-1. Method 1: using the `mock_if` decorator, along with the name and value of the environment variable you use to identify your test environment.
-This environment variable, say `ENV` will be checked at interpretation time: if its value matches the input, say `ENV=test`, the mocking logic will be implemented; if not, nothing in your code will be modified, and performance will stay the same since nothing will happen passed interpretation.
+1. Using the `mock_if` decorator, along with the name and value of the environment variable you use to identify your test environment.
+This environment variable, say `ENV`, will be checked at interpretation time: if its value matches the input, say `ENV=test`, the mocking logic will be implemented; if not, nothing in your code will be modified, and performance will stay the same since nothing will happen passed interpretation.
 
 Example of decoration:
 ```python
@@ -50,10 +50,10 @@ class MyObject:
     ...
 ```
 
-This method is concise, explicit and transparent: you can identify mocked candidates at a glance, and your tests can remain light without any heavy setup logic. However, it means patching production code, and carrying a dependency on this package in your production environment, which may be seen as a deal breaker from an isolation of concerns perspective.
+This method is concise, explicit and transparent: you can identify mocked methods at a glance, and your tests can remain light without any heavy setup logic. However, it means patching production code, and carrying a dependency on this package in your production environment, which may be seen as a deal breaker from an isolation of concerns perspective.
 
-2. Method 2: using explicit `mock` statements when setting up your tests.
-Before running individual tests, mocks can be injected explicitly as part of any piece of custom logic, typically through fixtures if you're familiar with `pytest` (you'll find examples in `examples/tests/`).
+2. Using explicit `mock` statements when setting up your tests.
+Before running individual tests, mocks can be injected explicitly, typically through fixtures if you're familiar with `pytest` (you'll find examples in `examples/tests/`).
 
 Example of statement:
 ```python
@@ -73,20 +73,21 @@ This method is a little bit heavier, and may require more maintenance when mocke
 ### Tear Down
 Once a test has run, underlying `expectise` objects have to be reset so that 1) some final checks can happen, and 2) new tests can be run with no undesirable side effects from previous tests. Again, there are 2 ways of performing the necessary tear down actions, described below.
 
-1. Method 1: using the `Expectations` context manager provided in this package. We recommend using this approach if only a few of your tests deal with functions that you want to mock. Toy example:
+1. Using the `Expectations` context manager provided in this package. We recommend using this approach if only a few of your tests deal with functions that you want to mock. Toy example:
 
 ```python
 from expectise import Expect
+from some_module.some_api import SomeAPI
 
 
 def test_instance_method():
     with Expectations():
-        Expect("SomeAPI").to_receive("update_attribute").and_return("sshhhh")
+        Expect(SomeAPI).to_receive("update_attribute").and_return("sshhhh")
         ...
         assert SomeAPI().update_attribute("secret_value") == "sshhhh"
 ```
 
-2. Method 2: by performing a teardown method for all your tests. We recommend using this approach if most of your tests manipulate objects that you want to mock. Reusing the `pytest` fixtures example from the previous section:
+2. By performing a teardown method for all your tests. We recommend using this approach if most of your tests manipulate objects that you want to mock. Reusing the `pytest` fixtures example from the previous section:
 
 ```python
 import pytest
@@ -100,10 +101,11 @@ def run_around_tests():
     yield
     tear_down()
 ```
+
 ### Manually Disabling a Mock
 
 Sometimes it can be useful to manually disable a mock - for example, to write a test for a method decorated with `mock_if`.
-To achieve this, simply call `Expect.disable_mock("<class name>", "<method name>")`
+To achieve this, simply call `Expect.disable_mock(<class>, "<method name>")` or `Expect.disable_mock("<class name>", "<method name>")`
 
 ## Mocking Examples
 The following use cases are covered:
@@ -114,10 +116,10 @@ The following use cases are covered:
 
 The above features can be combined too, with the following 4 possible patterns:
 ```python
-Expect('MyObject').to_receive('my_method').and_return(my_object)
-Expect('MyObject').to_receive('my_method').and_raise(my_error)
-Expect('MyObject').to_receive('my_method').with_args(*my_args, **my_kwargs).and_return(my_object)
-Expect('MyObject').to_receive('my_method').with_args(*my_args, **my_kwargs).and_raise(my_error)
+Expect("MyObject").to_receive("my_method").and_return(my_object)
+Expect("MyObject").to_receive("my_method").and_raise(my_error)
+Expect("MyObject").to_receive("my_method").with_args(*my_args, **my_kwargs).and_return(my_object)
+Expect("MyObject").to_receive("my_method").with_args(*my_args, **my_kwargs).and_raise(my_error)
 ```
 
 A given method of a class can be decorated several times, with different arguments to check and ouputs to be returned.
@@ -125,13 +127,22 @@ You just have to specify it with several `Expect` statements. In this case, the 
 
 The following is valid and assumes `my_method` is going to be called three times exactly:
 ```python
-Expect('MyObject').to_receive('my_method').with_args(*my_args_1, **my_kwargs_1).and_return(my_object_1)
-Expect('MyObject').to_receive('my_method').with_args(*my_args_2, **my_kwargs_2).and_raise(my_error)
-Expect('MyObject').to_receive('my_method').with_args(*my_args_3, **my_kwargs_3).and_return(my_object_2)
+Expect("MyObject").to_receive("my_method").with_args(*my_args_1, **my_kwargs_1).and_return(my_object_1)
+Expect("MyObject").to_receive("my_method").with_args(*my_args_2, **my_kwargs_2).and_raise(my_error)
+Expect("MyObject").to_receive("my_method").with_args(*my_args_3, **my_kwargs_3).and_return(my_object_2)
 ```
 
 Note that if a method decorated at least once with an `Expect` statement is called more or less times than the number
 of Expect statements, the unit test will fail.
+
+## Referencing the Mocked Class
+When writing an `Expect(...).to_receive(...) ...` statement, you have 2 options to reference the mocked class:
+1. by the class name, as a string: `Expect("MyObject").to_receive("my_method").and_return(my_value)`;
+2. by the class itself: `Expect(MyObject).to_receive("my_method").and_return(my_value)`.
+
+Using the class name as a reference is a handy shortcut that can save a lot of `import` statements. However, it only works well for small projects where there are no collisions between class names. Under the hood, individual mocks are indexed by class name and method name, which makes them vulnerable to collisions.
+
+In larger projects where class names may collide, using direct references allows avoiding mock collisions; the only downside being the need to import all mocked classes explicitly.
 
 # Contributing
 ## Local Setup
@@ -143,5 +154,5 @@ With `asdf` installed,
 ## Running Tests
 ```python
 poetry shell
-ENV=test python -m pytest -v examples/tests/
+ENV=test python -m pytest -v example/tests/
 ```
