@@ -3,7 +3,7 @@ name: Lint, Test and Release
 on: [push]
 jobs:
   lint:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -41,7 +41,7 @@ jobs:
         run: script -e -c "poetry run pre-commit run --all-files"
 
   test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -81,7 +81,7 @@ jobs:
         run: script -e -c "poetry run python -m pytest -v example/tests"
 
   release:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     needs: [lint, test]
 
     steps:
