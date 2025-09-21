@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from enum import Enum
 from typing import Any
 from typing import Callable
 from typing import Dict
@@ -18,12 +17,6 @@ from .exceptions import ExpectationError
 if TYPE_CHECKING:
     # Prevent circular dependency
     from .mocks import Mock
-
-
-class ReferenceMode(Enum):
-    NAME = "NAME"
-    CLASS = "CLASS"
-    UNDEFINED = "UNDEFINED"
 
 
 class Expect(object):

@@ -105,7 +105,7 @@ def run_around_tests():
 ### Manually Disabling a Mock
 
 Sometimes it can be useful to manually disable a mock - for example, to write a test for a method decorated with `mock_if`.
-To achieve this, simply call `Expect.disable_mock(<class>, "<method name>")` or `Expect.disable_mock("<class name>", "<method name>")`
+To achieve this, simply call `Expect.disable_mock(<class>, "<method name>")`.
 
 ## Mocking Examples
 The following use cases are covered:
@@ -116,10 +116,10 @@ The following use cases are covered:
 
 The above features can be combined too, with the following 4 possible patterns:
 ```python
-Expect("MyObject").to_receive("my_method").and_return(my_object)
-Expect("MyObject").to_receive("my_method").and_raise(my_error)
-Expect("MyObject").to_receive("my_method").with_args(*my_args, **my_kwargs).and_return(my_object)
-Expect("MyObject").to_receive("my_method").with_args(*my_args, **my_kwargs).and_raise(my_error)
+Expect(MyObject).to_receive("my_method").and_return(my_object)
+Expect(MyObject).to_receive("my_method").and_raise(my_error)
+Expect(MyObject).to_receive("my_method").with_args(*my_args, **my_kwargs).and_return(my_object)
+Expect(MyObject).to_receive("my_method").with_args(*my_args, **my_kwargs).and_raise(my_error)
 ```
 
 A given method of a class can be decorated several times, with different arguments to check and ouputs to be returned.
@@ -127,22 +127,13 @@ You just have to specify it with several `Expect` statements. In this case, the 
 
 The following is valid and assumes `my_method` is going to be called three times exactly:
 ```python
-Expect("MyObject").to_receive("my_method").with_args(*my_args_1, **my_kwargs_1).and_return(my_object_1)
-Expect("MyObject").to_receive("my_method").with_args(*my_args_2, **my_kwargs_2).and_raise(my_error)
-Expect("MyObject").to_receive("my_method").with_args(*my_args_3, **my_kwargs_3).and_return(my_object_2)
+Expect(MyObject).to_receive("my_method").with_args(*my_args_1, **my_kwargs_1).and_return(my_object_1)
+Expect(MyObject).to_receive("my_method").with_args(*my_args_2, **my_kwargs_2).and_raise(my_error)
+Expect(MyObject).to_receive("my_method").with_args(*my_args_3, **my_kwargs_3).and_return(my_object_2)
 ```
 
 Note that if a method decorated at least once with an `Expect` statement is called more or less times than the number
 of Expect statements, the unit test will fail.
-
-## Referencing the Mocked Class
-When writing an `Expect(...).to_receive(...) ...` statement, you have 2 options to reference the mocked class:
-1. by the class name, as a string: `Expect("MyObject").to_receive("my_method").and_return(my_value)`;
-2. by the class itself: `Expect(MyObject).to_receive("my_method").and_return(my_value)`.
-
-Using the class name as a reference is a handy shortcut that can save a lot of `import` statements. However, it only works well for small projects where there are no collisions between class names. Under the hood, individual mocks are indexed by class name and method name, which makes them vulnerable to collisions.
-
-In larger projects where class names may collide, using direct references allows avoiding mock collisions; the only downside being the need to import all mocked classes explicitly.
 
 # Contributing
 ## Local Setup
