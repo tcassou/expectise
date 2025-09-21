@@ -10,7 +10,7 @@ from expectise.exceptions import ExpectationError
 
 """
 In this example we use the `Expectations` context manager to handle the tear down of our Expect objects.
-In particular, we resolve calls to methods that were expected (in the sense of described by an `Expect` statement)
+When tearing down, we resolve calls to methods that were expected (in the sense of described by an `Expect` statement)
 but not performed.
 """
 

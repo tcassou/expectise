@@ -10,10 +10,10 @@ from expectise.exceptions import ExpectationError
 
 
 """
-In this example, we implement a Pytest fixture that defines a `tearDown` method in which we manage the
-context of our Expect objects. In particular, we resolve calls to methods that were expected (in the sense of
-described by an `Expect` statement) but not performed.
-The `tearDown` method is called at the end of each unit test.
+In this example, we implement a Pytest fixture that enumerates methods to be mocked, and resets the mocking context
+after each test by calling the `tear_down` function.
+When tearing down, we resolve calls to methods that were expected (in the sense of described by an `Expect` statement)
+but not performed.
 """
 
 
