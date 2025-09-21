@@ -10,6 +10,7 @@ from typing import Optional
 from typing import Type
 from typing import TYPE_CHECKING
 
+from .constants import Lifespan
 from .diff import Diff
 from .exceptions import EnvironmentError
 from .exceptions import ExpectationError
@@ -20,11 +21,6 @@ if TYPE_CHECKING:
     from .mocks import Mock
 
 
-class Lifespan(Enum):
-    PERMANENT = "PERMANENT"
-    TEMPORARY = "TEMPORARY"
-
-
 class ReferenceMode(Enum):
     NAME = "NAME"
     CLASS = "CLASS"
@@ -32,9 +28,7 @@ class ReferenceMode(Enum):
 
 
 class Expect(object):
-    """
-    Mocking function calls for unit tests purposes, refer to the README for more details and examples.
-    """
+    """Mocking function calls for unit tests purposes, refer to the README for more details and examples."""
 
     # Dict of classes with at least one method mocked, shared between Expect instances: {'class_name': class}
     MOCKED_CLASSES = set()

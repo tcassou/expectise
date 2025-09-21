@@ -2,9 +2,9 @@ import os
 from typing import Callable
 from typing import Type
 
+from .constants import Lifespan
 from .exceptions import EnvironmentError
 from .expect import Expect
-from .expect import Lifespan
 
 
 class Mock:
