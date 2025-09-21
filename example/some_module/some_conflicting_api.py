@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from expectise import mock_if
 
 
