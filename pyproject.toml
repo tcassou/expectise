@@ -17,8 +17,9 @@ classifiers = [
 
 packages = [
   { include = "expectise" },
-  { include = "expectise/constants" },
   { include = "expectise/exceptions" },
+  { include = "expectise/mock" },
+  { include = "expectise/models" },
 ]
 
 [tool.poetry.dependencies]

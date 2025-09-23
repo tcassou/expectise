@@ -1,4 +1,4 @@
-from .expect import Expect
+from expectise.mock.session import session
 
 
 class Expectations:
@@ -11,4 +11,4 @@ class Expectations:
         pass
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        Expect.tear_down(exc_val)
+        session.tear_down(exc_val)

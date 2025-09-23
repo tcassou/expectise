@@ -63,7 +63,7 @@ from expectise import mock
 
 @pytest.fixture(autouse=True)
 def run_around_tests():
-    mock(SomeObject, SomeObject.some_method, "ENV", "test")
+    mock(SomeObject.some_method)
     yield
     # see next section for more details on tear down actions
 ```
@@ -97,7 +97,7 @@ from expectise import tear_down
 
 @pytest.fixture(autouse=True)
 def run_around_tests():
-    mock(SomeObject, SomeObject.some_method, "ENV", "test")
+    mock(SomeObject.some_method)
     yield
     tear_down()
 ```
@@ -105,7 +105,7 @@ def run_around_tests():
 ### Manually Disabling a Mock
 
 Sometimes it can be useful to manually disable a mock - for example, to write a test for a method decorated with `mock_if`.
-To achieve this, simply call `Expect.disable_mock(<class>, "<method name>")`.
+To achieve this, simply call `disable_mock(method)`.
 
 ## Mocking Examples
 The following use cases are covered:

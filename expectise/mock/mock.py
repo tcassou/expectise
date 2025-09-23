@@ -1,0 +1,122 @@
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+
+from expectise.diff import Diff
+from expectise.exceptions import ExpectationError
+from expectise.mock.marker import Marker
+
+
+class Mock:
+    def __init__(self, marker: Marker):
+        self.marker = marker
+        self.method = marker.method
+        self.expected = 0
+        self.performed = 0
+        self.decorators = []
+        self.call_arguments = []
+        self.return_values = []
+        self.execution_errors = []
+
+    def reset(self) -> None:
+        self.expected = 0
+        self.performed = 0
+        self.decorators = []
+        self.call_arguments = []
+        self.return_values = []
+        self.execution_errors = []
+        self.marker.enable()
+
+    def new(self):
+        """"""
+        self.expected += 1
+        self.decorators.append(self.marker.placeholder)
+        self.call_arguments.append(None)
+        self.return_values.append(None)
+        self.execution_errors.append(None)
+        setattr(self.method.owner, self.method.name, self.override)
+
+    def add_argument_check(self, args: List[Any], kwargs: Dict[Any, Any]) -> None:
+        """Adding an argument check to the mock."""
+        self.call_arguments[-1] = (args, kwargs)
+        decorator = self.method.decoration.strip(self.decorators[-1])
+        decorator = self.with_args_decorator(decorator)
+        self.decorators[-1] = self.method.decoration.add(decorator)
+
+    def mark_call_received(self) -> None:
+        """Mark the mocked method as called, and raise an exception if it is called more times than expected."""
+        self.performed += 1
+        if self.performed > self.expected:
+            raise ExpectationError(f"{self.method.id} is expected to be called {self.expected} time(s) only.")
+
+    def add_return_value(self, value: Any) -> None:
+        """Adding a return value to the mock, and maintain call arguments checks if any."""
+        self.return_values[-1] = value
+        decorator = self.method.decoration.strip(self.decorators[-1])
+        decorator = self.return_decorator(decorator)
+        if self.call_arguments[-1] is not None:
+            decorator = self.with_args_decorator(decorator)
+        self.decorators[-1] = self.method.decoration.add(decorator)
+
+    def add_execution_errors(self, value: Any) -> None:
+        """Adding an execution error to the mock, and maintain call arguments checks if any."""
+        self.execution_errors[-1] = value
+        decorator = self.method.decoration.strip(self.decorators[-1])
+        decorator = self.raise_decorator(decorator)
+        if self.call_arguments[-1] is not None:
+            decorator = self.with_args_decorator(decorator)
+        self.decorators[-1] = self.method.decoration.add(decorator)
+
+    @property
+    def override(self) -> Callable:
+        """
+        Return the appropriate override of the mocked method to be applied during tests, according to Expect statements.
+        This override includes checks on whether the method is called, and the right number of times.
+        """
+
+        def func(*args, **kwargs):
+            self.mark_call_received()
+            decorated = self.method.decoration.strip(self.decorators[self.performed - 1])
+            return decorated(*args, **kwargs)
+
+        func._original_id = self.method.id
+        return self.method.decoration.add(func)
+
+    def assert_arguments(self, func_args: List[Any], func_kwargs: Dict[Any, Any]) -> None:
+        """Asserting equality of method arguments."""
+        args, kwargs = self.call_arguments[self.performed - 1]
+        msg = f"`{self.method.id}` called with " + "unexpected {} arguments:\n\n"
+        if args != func_args:
+            raise ExpectationError(msg.format("positional") + Diff.print(args, func_args))
+        if kwargs != func_kwargs:
+            raise ExpectationError(msg.format("keyword") + Diff.print(kwargs, func_kwargs))
+
+    def with_args_decorator(self, method: Callable) -> Callable:
+        """Decorator to check passed argument."""
+
+        def instance_func(obj, *func_args, **func_kwargs):
+            self.assert_arguments(func_args, func_kwargs)
+            return method(obj, *func_args, **func_kwargs)
+
+        def static_func(*func_args, **func_kwargs):
+            self.assert_arguments(func_args, func_kwargs)
+            return method(*func_args, **func_kwargs)
+
+        return static_func if self.method.decoration.is_staticmethod else instance_func
+
+    def return_decorator(self, method: Callable) -> Callable:
+        """Decorator to modify objects returned."""
+
+        def func(*func_args, **func_kwargs):
+            return self.return_values[self.performed - 1]
+
+        return func
+
+    def raise_decorator(self, method: Callable) -> Callable:
+        """Decorator to raise errors."""
+
+        def func(*func_args, **func_kwargs):
+            raise self.execution_errors[self.performed - 1]
+
+        return func

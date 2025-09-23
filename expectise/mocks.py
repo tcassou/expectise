@@ -1,86 +1,61 @@
-import os
 from typing import Callable
 from typing import Type
 
-from .constants import Lifespan
-from .exceptions import EnvironmentError
-from .expect import Expect
+from .models import Lifespan
+from .models.method import Method
+from .models.trigger import AlwaysTrigger
+from .models.trigger import EnvTrigger
+from expectise.mock.session import session
 
 
-class Mock:
-    """Represent a mocked method and its behaviour depending on the environment context."""
-
-    def __init__(self, klass: Type, method: Callable, env_name: str, env_value: str, lifespan: Lifespan) -> None:
-        self.klass = klass
-        self.method = method
-        self.is_classmethod = isinstance(method, classmethod)
-        self.is_staticmethod = isinstance(method, staticmethod)
-        self.is_property = isinstance(method, property)
-        self.env_name = env_name
-        self.env_value = env_value
-        self.lifespan = lifespan
-
-    @property
-    def name(self) -> str:
-        """Return the mocked method name, depending on the type of method mocked."""
-        if self.is_classmethod or self.is_staticmethod:
-            return self.method.__func__.__name__
-        if self.is_property:
-            return self.method.fget.__name__
-        return self.method.__name__
-
-    @property
-    def surrogate(self):
-        """Return a surrogate function that will replace the mocked method under the right environment context."""
-
-        def func(*args, **kwargs):
-            raise EnvironmentError(
-                f"""
-                Method `{self.name}` from class `{self.klass.__name__}` is mocked when {self.env_name}={self.env_value},
-                and will raise errors if called without using an `Expect` statement to define its mocked behavior.
-                """
-            )
-
-        if self.is_classmethod:
-            return classmethod(func)
-        if self.is_staticmethod:
-            return staticmethod(func)
-        if self.is_property:
-            return property(func)
-        return func
-
-    def disable(self):
-        """Restore the original method and remove any mocking logic."""
-        setattr(self.klass, self.name, self.method)
-
-    def enable(self):
-        """Replace the mocked method with its surrogate."""
-        Expect.set_up(self)
-
-
-def mock(klass: Type, method: Callable, env_name: str, env_value: str) -> None:
-    """Enable mocking of an object method by replacing it with a surrogate, requiring subsequent `Expect` statements."""
-    Mock(klass, method, env_name, env_value, lifespan=Lifespan.TEMPORARY).enable()
-
-
-def mock_if(env_name: str, env_value: str) -> Type:
+def mock(ref: Callable) -> None:
     """
-    Decorator to identify which methods should be mocked, only in case the right environment variable is set to the
-    right value. Example:
+    Mark a method as temporarily mocked.
+    * Once marked, a method cannot be called without using an `Expect` statement to define its mocked behavior.
+    * A temporary marker is automatically removed when the Expectise session is torn down.
+    """
+    method = Method(ref)
+    marker = session.mark_method(method, trigger=AlwaysTrigger(), lifespan=Lifespan.TEMPORARY)
+    marker.enable()
+
+
+def disable_mock(mock_ref: Callable) -> None:
+    """
+    Disable a mock marker, given the mocked method reference.
+    This is useful for disabling a permanent mock marker that was created with the `mock_if` decorator.
+    Once the marker is disabled, the method can be called and tested without any alteration of its behavior.
+    """
+    session.markers[session.get_original_id(mock_ref)].disable()
+
+
+def tear_down():
+    """Reset mocking behavior so that further tests can be run without any interference."""
+    session.tear_down()
+
+
+def mock_if(env_key: str, env_val: str) -> Type:
+    """
+    Decorator to identify which methods should be mocked permanently, depending on the environment.
+    * The marker is activated only in case the environment conditions are met.
+    * Once marked, a method cannot be called without using an `Expect` statement to define its mocked behavior.
+    * A permanent marker is not removed when the Expectise session is torn down (but related mocks are reset).
+
+    Example:
 
         mock_if("ENV", "test")
         def foo(...)
             pass
+
     """
 
     class MockDecorator:
-        def __init__(self, method: Callable) -> None:
+        def __init__(self, ref: Callable) -> None:
             """
             Decorator class, that takes as input the method to be mocked:
-            * if the environment conditions are met, the method is marked as to be mocked for later calls
+            * if the environment conditions are met, the method is effectively marked as mocked,
             * if not, the method is left unchanged.
             """
-            self.mock = Mock(None, method, env_name, env_value, lifespan=Lifespan.PERMANENT)
+            self.ref = ref
 
         def __set_name__(self, owner: Type, name: str) -> None:
             """
@@ -88,19 +63,14 @@ def mock_if(env_name: str, env_value: str) -> Type:
             As soon as it is, this `__set_name__` method is called, which gives us a way to know and record the class or
             object that owns the method.
             """
-            self.mock.klass = owner
-            # In any environment that is not our test environment, we do not interfere with the method definition.
-            if os.environ.get(env_name, "") != env_value:
-                self.mock.disable()
+            method = Method(self.ref, owner=owner)
+            marker = session.mark_method(method, trigger=EnvTrigger(env_key, env_val), lifespan=Lifespan.PERMANENT)
+            # If the environment conditions are not met, the marker is disabled.
+            if not marker.trigger.is_met():
                 return
 
-            # In test environment, the mocked methods are replaced by placeholders that raise errors if called without
-            # the prior use of an `Expect` statement to define how they should behave during tests.
-            self.mock.enable()
+            # If the environment conditions are met, the mocked methods are replaced by placeholders that raise errors
+            # if called without the prior use of an `Expect` statement to define how they should behave during tests.
+            marker.enable()
 
     return MockDecorator
-
-
-def tear_down():
-    """Reset mocking behavior so that further tests can be run without any interference."""
-    Expect.tear_down()
