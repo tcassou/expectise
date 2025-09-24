@@ -1,36 +1,10 @@
 from typing import Callable
 from typing import Type
 
-from .models import Lifespan
-from .models.method import Method
-from .models.trigger import AlwaysTrigger
-from .models.trigger import EnvTrigger
 from expectise.mock.session import session
-
-
-def mock(ref: Callable) -> None:
-    """
-    Mark a method as temporarily mocked.
-    * Once marked, a method cannot be called without using an `Expect` statement to define its mocked behavior.
-    * A temporary marker is automatically removed when the Expectise session is torn down.
-    """
-    method = Method(ref)
-    marker = session.mark_method(method, trigger=AlwaysTrigger(), lifespan=Lifespan.TEMPORARY)
-    marker.enable()
-
-
-def disable_mock(mock_ref: Callable) -> None:
-    """
-    Disable a mock marker, given the mocked method reference.
-    This is useful for disabling a permanent mock marker that was created with the `mock_if` decorator.
-    Once the marker is disabled, the method can be called and tested without any alteration of its behavior.
-    """
-    session.get_marker(mock_ref).disable()
-
-
-def tear_down():
-    """Reset mocking behavior so that further tests can be run without any interference."""
-    session.tear_down()
+from expectise.models import Lifespan
+from expectise.models.method import Method
+from expectise.models.trigger import EnvTrigger
 
 
 def mock_if(env_key: str, env_val: str) -> Type:

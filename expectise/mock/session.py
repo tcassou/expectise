@@ -1,7 +1,6 @@
-from typing import Optional
-
 from .marker import Marker
 from expectise.exceptions import EnvironmentError
+from expectise.exceptions import ExpectationError
 from expectise.models import Lifespan
 from expectise.models.decoration import Decoration
 from expectise.models.method import Method
@@ -38,34 +37,28 @@ class Session:
 
         return self.markers[mock_function._original_id]
 
-    def drop_temporary_markers(self):
-        """Drop all temporary markers and their related mocks from the session."""
-        temporary_markers = [m_id for m_id, marker in self.markers.items() if marker.lifespan == Lifespan.TEMPORARY]
-        for marker_id in temporary_markers:
-            self.markers.pop(marker_id)
-
-    def tear_down(self, execution_error: Optional[Exception] = None):
+    def tear_down(self):
         """"""
-        message = ""
+        expected_calls = []
+        temporary_markers = []
         for method_id, marker in self.markers.items():
 
             if (gap := marker.mock.expected - marker.mock.performed) > 0:
-                message += f"`{method_id}` still expected to be called {gap} time(s).\n"
+                expected_calls.append(f"`{method_id}` still expected to be called {gap} time(s).")
 
             if marker.lifespan == Lifespan.PERMANENT:
                 marker.reset()  # Permanent markers do not go away during tear_down, only their mocks are reset
             elif marker.lifespan == Lifespan.TEMPORARY:
                 marker.disable()  # Temporary markers are fully disabled during tear_down, and removed from the session
+                temporary_markers.append(method_id)
 
         # Fully removing all references to temporary markers
-        self.drop_temporary_markers()
-
-        # In case an exception was raised during the test, raising it again
-        if execution_error:
-            raise execution_error
+        for method_id in temporary_markers:
+            self.markers.pop(method_id)
 
         # If some calls are still expected, message is not empty, so asserting False with the appropriate message
-        assert not message, message
+        if expected_calls:
+            raise ExpectationError(expected_calls.join("\n"))
 
 
 session = Session()

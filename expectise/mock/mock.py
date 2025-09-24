@@ -3,10 +3,10 @@ from typing import Callable
 from typing import Dict
 from typing import List
 
-from expectise.diff import Diff
 from expectise.exceptions import EnvironmentError
 from expectise.exceptions import ExpectationError
 from expectise.models.method import Method
+from expectise.utils.diff import Diff
 
 
 class Mock:
