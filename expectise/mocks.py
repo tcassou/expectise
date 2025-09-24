@@ -25,7 +25,7 @@ def disable_mock(mock_ref: Callable) -> None:
     This is useful for disabling a permanent mock marker that was created with the `mock_if` decorator.
     Once the marker is disabled, the method can be called and tested without any alteration of its behavior.
     """
-    session.markers[session.get_original_id(mock_ref)].disable()
+    session.get_marker(mock_ref).disable()
 
 
 def tear_down():

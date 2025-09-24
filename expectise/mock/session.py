@@ -1,4 +1,3 @@
-from typing import Callable
 from typing import Optional
 
 from .marker import Marker
@@ -19,8 +18,14 @@ class Session:
         self.markers[method.id] = marker
         return marker
 
-    def get_original_id(self, mock_ref: Callable) -> str:
-        """Get the original id of a method, given its mock reference."""
+    def get_marker(self, mock_ref: str) -> Marker:
+        """
+        Get a marker, given a mock reference.
+        Once a method is marked as mocked and the marker is enabled, accessing it will return the mock object and not
+        the original method anymore.
+        The mock object keeps track of the original method identifier, which creates the connection between the marker
+        and the mock object.
+        """
         decoration = Decoration(mock_ref)
         mock_function = decoration.strip(mock_ref)
         if not hasattr(mock_function, "_original_id"):
@@ -31,7 +36,7 @@ class Session:
                 "with the `@mock_if` decorator, or through standalone `mock` statements."
             )
 
-        return mock_function._original_id
+        return self.markers[mock_function._original_id]
 
     def drop_temporary_markers(self):
         """Drop all temporary markers and their related mocks from the session."""

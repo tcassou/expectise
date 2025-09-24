@@ -10,7 +10,7 @@ class Expect(object):
 
     def __init__(self, mock_ref: Callable) -> None:
         """Initialize an Expect instance with the class to be mocked."""
-        self.method = session.markers[session.get_original_id(mock_ref)].method
+        self.method = session.get_marker(mock_ref).method
         self.mock.new()
 
     @property
