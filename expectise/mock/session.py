@@ -58,7 +58,7 @@ class Session:
 
         # If some calls are still expected, message is not empty, so asserting False with the appropriate message
         if expected_calls:
-            raise ExpectationError(expected_calls.join("\n"))
+            raise ExpectationError("\n".join(expected_calls))
 
 
 session = Session()

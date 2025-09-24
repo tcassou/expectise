@@ -9,6 +9,14 @@ from expectise.models.method import Method
 from expectise.utils.diff import Diff
 
 
+class MockInstance:
+    def __init__(self):
+        self.surrogate = None
+        self.call_arguments = None
+        self.return_value = None
+        self.execution_error = None
+
+
 class Mock:
     def __init__(self, method: Method):
         self.method = method
@@ -17,7 +25,7 @@ class Mock:
     def reset(self) -> None:
         self.expected = 0
         self.performed = 0
-        self.decorators = []
+        self.surrogates = []
         self.call_arguments = []
         self.return_values = []
         self.execution_errors = []
@@ -25,7 +33,7 @@ class Mock:
     def new(self):
         """"""
         self.expected += 1
-        self.decorators.append(self.base_decorator)
+        self.surrogates.append(None)
         self.call_arguments.append(None)
         self.return_values.append(None)
         self.execution_errors.append(None)
@@ -34,9 +42,6 @@ class Mock:
     def add_argument_check(self, args: List[Any], kwargs: Dict[Any, Any]) -> None:
         """Adding an argument check to the mock."""
         self.call_arguments[-1] = (args, kwargs)
-        decorator = self.method.decoration.strip(self.decorators[-1])
-        decorator = self.with_args_decorator(decorator)
-        self.decorators[-1] = self.method.decoration.add(decorator)
 
     def mark_call_received(self) -> None:
         """Mark the mocked method as called, and raise an exception if it is called more times than expected."""
@@ -47,20 +52,18 @@ class Mock:
     def add_return_value(self, value: Any) -> None:
         """Adding a return value to the mock, and maintain call arguments checks if any."""
         self.return_values[-1] = value
-        decorator = self.method.decoration.strip(self.decorators[-1])
-        decorator = self.return_decorator(decorator)
+        surrogate = self._return
         if self.call_arguments[-1] is not None:
-            decorator = self.with_args_decorator(decorator)
-        self.decorators[-1] = self.method.decoration.add(decorator)
+            surrogate = self._check_arguments(surrogate)
+        self.surrogates[-1] = self.method.decoration.add(surrogate)
 
     def add_execution_errors(self, value: Any) -> None:
         """Adding an execution error to the mock, and maintain call arguments checks if any."""
         self.execution_errors[-1] = value
-        decorator = self.method.decoration.strip(self.decorators[-1])
-        decorator = self.raise_decorator(decorator)
+        surrogate = self._raise
         if self.call_arguments[-1] is not None:
-            decorator = self.with_args_decorator(decorator)
-        self.decorators[-1] = self.method.decoration.add(decorator)
+            surrogate = self._check_arguments(surrogate)
+        self.surrogates[-1] = self.method.decoration.add(surrogate)
 
     @property
     def override(self) -> Callable:
@@ -71,8 +74,14 @@ class Mock:
 
         def func(*args, **kwargs):
             self.mark_call_received()
-            decorated = self.method.decoration.strip(self.decorators[self.performed - 1])
-            return decorated(*args, **kwargs)
+            if self.surrogates[self.performed - 1] is None:
+                raise EnvironmentError(
+                    f"Incomplete `Expect` statement for method `{self.method.id}`. "
+                    "Make sure the mock is properly set up by defining the expected return value or execution error."
+                )
+
+            surrogate = self.method.decoration.strip(self.surrogates[self.performed - 1])
+            return surrogate(*args, **kwargs)
 
         func._original_id = self.method.id
         return self.method.decoration.add(func)
@@ -86,20 +95,7 @@ class Mock:
         if kwargs != func_kwargs:
             raise ExpectationError(msg.format("keyword") + Diff.print(kwargs, func_kwargs))
 
-    @property
-    def base_decorator(self) -> Callable:
-        """Return a placeholder function that will replace the mocked method under the right environment context."""
-
-        def func(*args, **kwargs):
-            raise EnvironmentError(
-                f"Incomplete `Expect` statement for method `{self.method.id}`. "
-                "Make sure the mock is properly configured by defining the expected return value or execution error."
-            )
-
-        func._original_id = self.method.id
-        return self.method.decoration.add(func)
-
-    def with_args_decorator(self, method: Callable) -> Callable:
+    def _check_arguments(self, method: Callable) -> Callable:
         """Decorator to check passed argument."""
 
         def instance_func(obj, *func_args, **func_kwargs):
@@ -112,18 +108,10 @@ class Mock:
 
         return static_func if self.method.decoration.is_staticmethod else instance_func
 
-    def return_decorator(self, method: Callable) -> Callable:
-        """Decorator to modify objects returned."""
+    def _return(self, *args, **kwargs) -> Any:
+        """Simulate an object being returned."""
+        return self.return_values[self.performed - 1]
 
-        def func(*func_args, **func_kwargs):
-            return self.return_values[self.performed - 1]
-
-        return func
-
-    def raise_decorator(self, method: Callable) -> Callable:
-        """Decorator to raise errors."""
-
-        def func(*func_args, **func_kwargs):
-            raise self.execution_errors[self.performed - 1]
-
-        return func
+    def _raise(self, *args, **kwargs) -> None:
+        """Simulate an error being raised."""
+        raise self.execution_errors[self.performed - 1]

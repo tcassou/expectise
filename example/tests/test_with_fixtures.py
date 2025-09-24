@@ -66,7 +66,7 @@ def test_method_called_with_args():
         SomeAPI.do_something_else(x=12)
 
     # Note that in case the arguments passed do not match expectations, an `ExpectationError` is raised.
-    Expect(SomeAPI.do_something_else).to_receive(x=12)
+    Expect(SomeAPI.do_something_else).to_receive(x=12).and_return(True)
     with pytest.raises(ExpectationError):
         SomeAPI.do_something_else(x=13)
 
