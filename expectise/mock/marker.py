@@ -1,4 +1,5 @@
 from expectise.exceptions import EnvironmentError
+from expectise.mock.mock import Mock
 from expectise.models import Lifespan
 from expectise.models.method import Method
 from expectise.models.trigger import Trigger
@@ -9,6 +10,7 @@ class Marker:
 
     def __init__(self, method: Method, trigger: Trigger, lifespan: Lifespan) -> None:
         self.method = method
+        self.mock = Mock(method)
         self.trigger = trigger
         self.lifespan = lifespan
 
@@ -32,3 +34,8 @@ class Marker:
     def disable(self):
         """Restore the original method and remove any mocking logic."""
         setattr(self.method.owner, self.method.name, self.method.ref)
+
+    def reset(self):
+        """Reset the marker and its mock."""
+        self.mock.reset()
+        self.enable()

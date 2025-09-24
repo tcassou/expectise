@@ -4,20 +4,15 @@ from typing import Dict
 from typing import List
 
 from expectise.diff import Diff
+from expectise.exceptions import EnvironmentError
 from expectise.exceptions import ExpectationError
-from expectise.mock.marker import Marker
+from expectise.models.method import Method
 
 
 class Mock:
-    def __init__(self, marker: Marker):
-        self.marker = marker
-        self.method = marker.method
-        self.expected = 0
-        self.performed = 0
-        self.decorators = []
-        self.call_arguments = []
-        self.return_values = []
-        self.execution_errors = []
+    def __init__(self, method: Method):
+        self.method = method
+        self.reset()
 
     def reset(self) -> None:
         self.expected = 0
@@ -26,12 +21,11 @@ class Mock:
         self.call_arguments = []
         self.return_values = []
         self.execution_errors = []
-        self.marker.enable()
 
     def new(self):
         """"""
         self.expected += 1
-        self.decorators.append(self.marker.placeholder)
+        self.decorators.append(self.base_decorator)
         self.call_arguments.append(None)
         self.return_values.append(None)
         self.execution_errors.append(None)
@@ -91,6 +85,19 @@ class Mock:
             raise ExpectationError(msg.format("positional") + Diff.print(args, func_args))
         if kwargs != func_kwargs:
             raise ExpectationError(msg.format("keyword") + Diff.print(kwargs, func_kwargs))
+
+    @property
+    def base_decorator(self) -> Callable:
+        """Return a placeholder function that will replace the mocked method under the right environment context."""
+
+        def func(*args, **kwargs):
+            raise EnvironmentError(
+                f"Incomplete `Expect` statement for method `{self.method.id}`. "
+                "Make sure the mock is properly configured by defining the expected return value or execution error."
+            )
+
+        func._original_id = self.method.id
+        return self.method.decoration.add(func)
 
     def with_args_decorator(self, method: Callable) -> Callable:
         """Decorator to check passed argument."""

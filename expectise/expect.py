@@ -16,7 +16,7 @@ class Expect(object):
     @property
     def mock(self):
         """Return the Mock object associated with the method."""
-        return session.mocks[self.method.id]
+        return session.markers[self.method.id].mock
 
     def to_receive(self, *args, **kwargs) -> Expect:
         """Decorating a method to check it is called with the desired arguments."""

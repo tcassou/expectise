@@ -2,7 +2,6 @@ from typing import Callable
 from typing import Optional
 
 from .marker import Marker
-from .mock import Mock
 from expectise.exceptions import EnvironmentError
 from expectise.models import Lifespan
 from expectise.models.decoration import Decoration
@@ -13,13 +12,11 @@ from expectise.models.trigger import Trigger
 class Session:
     def __init__(self):
         self.markers = {}
-        self.mocks = {}
 
     def mark_method(self, method: Method, trigger: Trigger, lifespan: Lifespan) -> Marker:
         """Mark a method as mocked, without enabling the marker yet."""
         marker = Marker(method, trigger=trigger, lifespan=lifespan)
         self.markers[method.id] = marker
-        self.mocks[method.id] = Mock(marker)
         return marker
 
     def get_original_id(self, mock_ref: Callable) -> str:
@@ -41,23 +38,19 @@ class Session:
         temporary_markers = [m_id for m_id, marker in self.markers.items() if marker.lifespan == Lifespan.TEMPORARY]
         for marker_id in temporary_markers:
             self.markers.pop(marker_id)
-            self.mocks.pop(marker_id)
 
     def tear_down(self, execution_error: Optional[Exception] = None):
         """"""
         message = ""
         for method_id, marker in self.markers.items():
 
-            mock = self.mocks[method_id]
-            if (gap := mock.expected - mock.performed) > 0:
+            if (gap := marker.mock.expected - marker.mock.performed) > 0:
                 message += f"`{method_id}` still expected to be called {gap} time(s).\n"
 
-            # Permanent markers do not go away during tear_down, only their mocks are reset
             if marker.lifespan == Lifespan.PERMANENT:
-                self.mocks[method_id].reset()
-            # Temporary markers are fully disabled during tear_down, and removed from the session
+                marker.reset()  # Permanent markers do not go away during tear_down, only their mocks are reset
             elif marker.lifespan == Lifespan.TEMPORARY:
-                marker.disable()
+                marker.disable()  # Temporary markers are fully disabled during tear_down, and removed from the session
 
         # Fully removing all references to temporary markers
         self.drop_temporary_markers()
