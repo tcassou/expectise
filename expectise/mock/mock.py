@@ -1,20 +1,11 @@
 from typing import Any
 from typing import Callable
-from typing import Dict
-from typing import List
 
 from expectise.exceptions import EnvironmentError
 from expectise.exceptions import ExpectationError
+from expectise.mock.mock_instance import MockInstance
 from expectise.models.method import Method
 from expectise.utils.diff import Diff
-
-
-class MockInstance:
-    def __init__(self):
-        self.surrogate = None
-        self.call_arguments = None
-        self.return_value = None
-        self.execution_error = None
 
 
 class Mock:
@@ -23,25 +14,25 @@ class Mock:
         self.reset()
 
     def reset(self) -> None:
-        self.expected = 0
         self.performed = 0
-        self.surrogates = []
-        self.call_arguments = []
-        self.return_values = []
-        self.execution_errors = []
+        self.instances = []
 
     def new(self):
         """"""
-        self.expected += 1
-        self.surrogates.append(None)
-        self.call_arguments.append(None)
-        self.return_values.append(None)
-        self.execution_errors.append(None)
+        self.instances.append(MockInstance())
         setattr(self.method.owner, self.method.name, self.override)
 
-    def add_argument_check(self, args: List[Any], kwargs: Dict[Any, Any]) -> None:
-        """Adding an argument check to the mock."""
-        self.call_arguments[-1] = (args, kwargs)
+    @property
+    def expected(self) -> int:
+        return len(self.instances)
+
+    @property
+    def last_instance(self) -> MockInstance:
+        return self.instances[-1]
+
+    @property
+    def current_instance(self) -> MockInstance:
+        return self.instances[self.performed - 1]
 
     def mark_call_received(self) -> None:
         """Mark the mocked method as called, and raise an exception if it is called more times than expected."""
@@ -49,21 +40,27 @@ class Mock:
         if self.performed > self.expected:
             raise ExpectationError(f"{self.method.id} is expected to be called {self.expected} time(s) only.")
 
+    def add_argument_check(self, args: list[Any], kwargs: dict[Any, Any]) -> None:
+        """Adding an argument check to the mock."""
+        self.last_instance.call_arguments = (args, kwargs)
+
+    def assert_arguments(self, func_args: list[Any], func_kwargs: dict[Any, Any]) -> None:
+        """Asserting equality of method arguments."""
+        args, kwargs = self.current_instance.call_arguments
+        args_start_index = 0 if self.method.decoration.is_staticmethod else 1
+        msg = f"`{self.method.id}` called with " + "unexpected {} arguments:\n\n"
+        if args != func_args[args_start_index:]:
+            raise ExpectationError(msg.format("positional") + Diff.print(args, func_args[args_start_index]))
+        if kwargs != func_kwargs:
+            raise ExpectationError(msg.format("keyword") + Diff.print(kwargs, func_kwargs))
+
     def add_return_value(self, value: Any) -> None:
         """Adding a return value to the mock, and maintain call arguments checks if any."""
-        self.return_values[-1] = value
-        surrogate = self._return
-        if self.call_arguments[-1] is not None:
-            surrogate = self._check_arguments(surrogate)
-        self.surrogates[-1] = self.method.decoration.add(surrogate)
+        self.last_instance.return_value = value
 
     def add_execution_errors(self, value: Any) -> None:
         """Adding an execution error to the mock, and maintain call arguments checks if any."""
-        self.execution_errors[-1] = value
-        surrogate = self._raise
-        if self.call_arguments[-1] is not None:
-            surrogate = self._check_arguments(surrogate)
-        self.surrogates[-1] = self.method.decoration.add(surrogate)
+        self.last_instance.execution_error = value
 
     @property
     def override(self) -> Callable:
@@ -74,44 +71,18 @@ class Mock:
 
         def func(*args, **kwargs):
             self.mark_call_received()
-            if self.surrogates[self.performed - 1] is None:
+            mock_instance = self.current_instance
+            if not mock_instance.has_return_value and not mock_instance.has_execution_error:
                 raise EnvironmentError(
                     f"Incomplete `Expect` statement for method `{self.method.id}`. "
                     "Make sure the mock is properly set up by defining the expected return value or execution error."
                 )
-
-            surrogate = self.method.decoration.strip(self.surrogates[self.performed - 1])
-            return surrogate(*args, **kwargs)
+            if mock_instance.has_argument_check:
+                self.assert_arguments(args, kwargs)
+            if mock_instance.has_return_value:
+                return mock_instance.return_value
+            if mock_instance.has_execution_error:
+                raise mock_instance.execution_error
 
         func._original_id = self.method.id
         return self.method.decoration.add(func)
-
-    def assert_arguments(self, func_args: List[Any], func_kwargs: Dict[Any, Any]) -> None:
-        """Asserting equality of method arguments."""
-        args, kwargs = self.call_arguments[self.performed - 1]
-        msg = f"`{self.method.id}` called with " + "unexpected {} arguments:\n\n"
-        if args != func_args:
-            raise ExpectationError(msg.format("positional") + Diff.print(args, func_args))
-        if kwargs != func_kwargs:
-            raise ExpectationError(msg.format("keyword") + Diff.print(kwargs, func_kwargs))
-
-    def _check_arguments(self, method: Callable) -> Callable:
-        """Decorator to check passed argument."""
-
-        def instance_func(obj, *func_args, **func_kwargs):
-            self.assert_arguments(func_args, func_kwargs)
-            return method(obj, *func_args, **func_kwargs)
-
-        def static_func(*func_args, **func_kwargs):
-            self.assert_arguments(func_args, func_kwargs)
-            return method(*func_args, **func_kwargs)
-
-        return static_func if self.method.decoration.is_staticmethod else instance_func
-
-    def _return(self, *args, **kwargs) -> Any:
-        """Simulate an object being returned."""
-        return self.return_values[self.performed - 1]
-
-    def _raise(self, *args, **kwargs) -> None:
-        """Simulate an error being raised."""
-        raise self.execution_errors[self.performed - 1]
