@@ -6,6 +6,13 @@ from expectise.models.decoration import Decoration
 
 
 class Method:
+    """
+    Method to represent a function or method.
+
+    This class is used to keep track of the function's or method's metadata before it is replaced by a mock:
+    orginal name, owning class or module, decoration, etc.
+    """
+
     def __init__(self, ref: Callable, owner: Type | None = None):
         self.ref = ref
         self.decoration = Decoration(ref)

@@ -6,7 +6,17 @@ from expectise.models.trigger import Trigger
 
 
 class Marker:
-    """Represent a mocked method and its behaviour depending on the environment context."""
+    """
+    Marker to indicate that a function or method is mocked, and block any calls to the original method.
+
+    There are 2 different types of markers:
+    * Permanent markers: created using the `mock_if` decorator, they are active only when the right
+    environment variable is set. Permanent markers are not removed between individual tests.
+    * Temporary markers: created using the `mock` function, they are active only for the duration of the test.
+    Temporary markers are removed between individual tests.
+
+    Once a marker is set on a function or method, its behavior can be described using `Expect` statements.
+    """
 
     def __init__(self, method: Method, trigger: Trigger, lifespan: Lifespan) -> None:
         self.method = method

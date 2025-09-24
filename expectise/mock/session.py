@@ -8,7 +8,17 @@ from expectise.models.trigger import Trigger
 
 
 class Session:
+    """
+    Session to manage the mocked functions and methods.
+
+    The session is responsible for:
+    * marking functions and methods as mocked,
+    * storing the mocked functions and methods,
+    * tearing down the session and resetting the mocked functions and methods after each test.
+    """
+
     def __init__(self):
+        """Initialize the session with an empty dictionary of markers."""
         self.markers = {}
 
     def mark_method(self, method: Method, trigger: Trigger, lifespan: Lifespan) -> Marker:
@@ -38,7 +48,12 @@ class Session:
         return self.markers[mock_function._original_id]
 
     def tear_down(self):
-        """"""
+        """
+        Tear down the session and reset the mocked functions and methods.
+        * Permanent markers are not removed during tear down, only their mocks are reset.
+        * Temporary markers are fully disabled during tear down, and removed from the session.
+        * If some function or method calls are still expected, an error is raised to indicate the missing expectations.
+        """
         expected_calls = []
         temporary_markers = []
         for method_id, marker in self.markers.items():
@@ -61,4 +76,5 @@ class Session:
             raise ExpectationError("\n".join(expected_calls))
 
 
+# Singleton instance of the session
 session = Session()

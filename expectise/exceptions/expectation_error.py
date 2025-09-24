@@ -1,2 +1,6 @@
 class ExpectationError(Exception):
-    """Error describing misuses of `Expect` statements."""
+    """
+    Error describing a mismatch between mock expectations and actual calls:
+    * more or less calls than expected,
+    * arguments passed to the mock do not match expectations.
+    """

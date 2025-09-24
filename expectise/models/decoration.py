@@ -2,6 +2,14 @@ from typing import Callable
 
 
 class Decoration:
+    """
+    Decoration to manage the base decoration of a function or method: classmethod, staticmethod, property.
+
+    It can be used to:
+    * strip the decoration of a function or method;
+    * add back its decoration to a function or method.
+    """
+
     def __init__(self, ref: Callable):
         self.is_classmethod = isinstance(ref, classmethod)
         self.is_staticmethod = isinstance(ref, staticmethod)

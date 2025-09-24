@@ -5,6 +5,11 @@ from expectise.exceptions import EnvironmentError
 
 
 class MockInstance:
+    """
+    A mocked function or method may be called several times during a test, with varying arguments and return values.
+    This class is used to store the configuration of a single call to the mocked method.
+    """
+
     def __init__(self):
         self.has_argument_check = False
         self._call_arguments = None
@@ -14,6 +19,10 @@ class MockInstance:
         self._execution_error = None
 
     def assert_incomplete(self) -> None:
+        """
+        Check that the mock instance configuration is not complete, and raise an error if it is.
+        A mock instance is considered complete when it has either a return value or an execution error.
+        """
         if self.has_return_value:
             raise EnvironmentError("Return value already set for this mock instance.")
         if self.has_execution_error:

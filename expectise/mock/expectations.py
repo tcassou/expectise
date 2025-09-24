@@ -3,8 +3,8 @@ from expectise.mock.session import session
 
 class Expectations:
     """
-    Class used as context manager for `Expect` statements, as a way to check the set of expectations
-    for any missing calls before exiting tests.
+    Context manager for `Expect` statements.
+    It can be used to check the set of expectations for any missing calls before exiting the context manager.
     """
 
     def __enter__(self):
