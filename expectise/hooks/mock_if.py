@@ -1,6 +1,7 @@
 from typing import Callable
 from typing import Type
 
+from expectise.exceptions import EnvironmentError
 from expectise.lib.session import session
 from expectise.models import Lifespan
 from expectise.models.method import Method
@@ -32,7 +33,9 @@ def mock_if(env_key: str, env_val: str) -> Type:
             self.method = Method(ref)
             self._original_id = self.method.id
             self.marker = session.mark_method(
-                self.method, trigger=EnvTrigger(env_key, env_val), lifespan=Lifespan.PERMANENT
+                self.method,
+                trigger=EnvTrigger(env_key, env_val),
+                lifespan=Lifespan.PERMANENT,
             )
 
         def __set_name__(self, owner: Type, name: str) -> None:
@@ -46,6 +49,16 @@ def mock_if(env_key: str, env_val: str) -> Type:
 
         def __call__(self, *args, **kwargs) -> Callable:
             """ """
+            # Function markers cannot be enabled at interpretation time like method markers can.
+            # Such markers are enabled later, when `Expect` statements are used to define the mocked behavior.
+            # If the function is called without using an `Expect` statement to define its mocked behavior,
+            # we need to raise an error, unless the marker was explicitly disabled.
+            if not self.marker.enabled and not self.marker.disabled:
+                raise EnvironmentError(
+                    f"Method `{self.method.id}` is marked as mocked, "
+                    "and will raise errors if called without using an `Expect` statement to define its mocked behavior."
+                )
+
             return getattr(self.method.owner, self.method.name)(*args, **kwargs)
 
     return MockDecorator

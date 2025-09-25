@@ -2,5 +2,14 @@ from expectise import mock_if
 
 
 @mock_if("ENV", "test")
-def my_function(a: int, b: int) -> int:
+def my_sum(a: int, b: int) -> int:
     return a + b
+
+
+@mock_if("ENV", "test")
+def my_square(a: int) -> int:
+    return a * a
+
+
+def my_root(a: int) -> int:
+    return a**0.5

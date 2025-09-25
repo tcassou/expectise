@@ -1,3 +1,5 @@
+from typing import Callable
+
 from .marker import Marker
 from expectise.exceptions import EnvironmentError
 from expectise.exceptions import ExpectationError
@@ -27,7 +29,7 @@ class Session:
         self.markers[method.id] = marker
         return marker
 
-    def get_marker(self, mock_ref: str) -> Marker:
+    def get_marker(self, mock_or_ref: Callable) -> Marker:
         """
         Get a marker, given a mock reference.
         Once a method is marked as mocked and the marker is enabled, accessing it will return the mock object and not
@@ -35,23 +37,30 @@ class Session:
         The mock object keeps track of the original method identifier, which creates the connection between the marker
         and the mock object.
         """
-        decoration = Decoration(mock_ref)
-        mock_function = decoration.strip(mock_ref)
-        if not hasattr(mock_function, "_original_id"):
-            method = Method(mock_ref)
-            raise EnvironmentError(
-                f"Method `{method.id}` is not marked as mocked, so this instantiation is not allowed. "
-                "Check that the right environment variable are set, and that the method is marked as mocked "
-                "with the `@mock_if` decorator, or through standalone `mock` statements."
-            )
+        decoration = Decoration(mock_or_ref)
+        function = decoration.strip(mock_or_ref)
 
-        marker = self.markers[mock_function._original_id]
-        if marker.method.klass is None:
+        if hasattr(function, "_original_id"):
+            # we're given a mock, so we know the marker is set and enabled
+            method_id = function._original_id
+        else:
+            # we're given a function or method, so we need to check if the marker is set and enabled
+            # this is a valid case when using `mock()` statements for standalone functions
+            method_id = Method(mock_or_ref).id
+            if method_id not in self.markers:
+                raise EnvironmentError(
+                    f"Method `{method_id}` is not marked as mocked, so this instantiation is not allowed. "
+                    "Check that the right environment variable are set, and that the method is marked as mocked "
+                    "with the `@mock_if` decorator, or through standalone `mock` statements."
+                )
+
+        marker = self.markers[method_id]
+        if marker.method.klass is None and not marker.disabled:
             marker.enable()
 
         return marker
 
-    def tear_down(self):
+    def tear_down(self, exception: Exception = None):
         """
         Tear down the session and reset the mocked functions and methods.
         * Permanent markers are not removed during tear down, only their mocks are reset.
@@ -74,6 +83,9 @@ class Session:
         # Fully removing all references to temporary markers
         for method_id in temporary_markers:
             self.markers.pop(method_id)
+
+        if exception:
+            raise exception
 
         # If some calls are still expected, message is not empty, so asserting False with the appropriate message
         if expected_calls:

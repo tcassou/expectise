@@ -60,7 +60,7 @@ def test_method_called():
 
 def test_method_called_with_args():
     # You can check that the correct arguments are passed to the method call. That said, for this example to work,
-    # you still need to define what the mocked function should return: an `EnvironmentError` is raised.
+    # you still need to define what the mocked method should return: an `EnvironmentError` is raised.
     Expect(SomeAPI.do_something_else).to_receive(x=12)
     with pytest.raises(EnvironmentError):
         SomeAPI.do_something_else(x=12)
@@ -72,7 +72,7 @@ def test_method_called_with_args():
 
 
 def test_method_return():
-    # Expecting the function `get_something` to be called, with specifc arguments passed to it, and overriding its
+    # Expecting the method `get_something` to be called, with specifc arguments passed to it, and overriding its
     # behavior to return a desired output. This test case checks that the method is called, with the right input,
     # and modifies its return value(s). Can be useful in case the `get_something` performs a call to an external
     # service that you want to avoid in test environment, and therefore want to mock the response with your output.
@@ -92,7 +92,7 @@ def test_method_called_twice():
 
 
 def test_method_raise():
-    # Expecting the function `get_something` to be called, with specifc arguments passed to it, and overriding its
+    # Expecting the method `get_something` to be called, with specifc arguments passed to it, and overriding its
     # behavior to raise the desired error. This test case checks that the method is called, with the right input,
     # and modifies its behavior. Can be useful to ensure that your code handles exceptions gracefully.
     Expect(SomeAPI.get_something).to_receive("foo", "bar").and_raise(ValueError("My error"))

@@ -11,4 +11,4 @@ class Expectations:
         pass
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        session.tear_down()
+        session.tear_down(exception=exc_val)

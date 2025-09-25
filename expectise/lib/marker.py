@@ -23,6 +23,8 @@ class Marker:
         self.mock = Mock(method)
         self.trigger = trigger
         self.lifespan = lifespan
+        self.enabled = False
+        self.disabled = False
 
     @property
     def placeholder(self):
@@ -44,12 +46,16 @@ class Marker:
         """
         if self.trigger.is_met():
             setattr(self.method.owner, self.method.name, self.placeholder)
+            self.enabled = True
 
-    def disable(self):
+    def disable(self, mark_disabled: bool = False):
         """Restore the original method and remove any mocking logic."""
         setattr(self.method.owner, self.method.name, self.method.ref)
+        self.enabled = False
+        self.disabled = mark_disabled
 
     def reset(self):
         """Reset the marker and its mock."""
         self.mock.reset()
         self.enable()
+        self.disabled = False
