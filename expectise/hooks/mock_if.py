@@ -58,7 +58,7 @@ def mock_if(env_key: str, env_val: str) -> Type:
             """
             if not self.marker.enabled and not self.marker.disabled:
                 raise EnvironmentError(
-                    f"Method `{self.kallable.id}` is marked as mocked, "
+                    f"Callable `{self.kallable.id}` is marked as mocked, "
                     "and will raise errors if called without using an `Expect` statement to define its mocked behavior."
                 )
 
