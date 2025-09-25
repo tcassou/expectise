@@ -13,3 +13,11 @@ def my_square(a: int) -> int:
 
 def my_root(a: int) -> int:
     return a**0.5
+
+
+def my_product(a: int, b: int) -> int:
+    return a * b
+
+
+def my_division(a: int, b: int) -> int:
+    return a / b

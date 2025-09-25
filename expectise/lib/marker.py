@@ -1,13 +1,13 @@
 from .mock import Mock
 from expectise.exceptions import EnvironmentError
 from expectise.models import Lifespan
-from expectise.models.method import Method
+from expectise.models.kallable import Kallable
 from expectise.models.trigger import Trigger
 
 
 class Marker:
     """
-    Marker to indicate that a function or method is mocked, and block any calls to the original method.
+    Marker to indicate that a function or method is mocked, and block any calls to the original function or method.
 
     There are 2 different types of markers:
     * Permanent markers: created using the `mock_if` decorator, they are active only when the right
@@ -18,44 +18,46 @@ class Marker:
     Once a marker is set on a function or method, its behavior can be described using `Expect` statements.
     """
 
-    def __init__(self, method: Method, trigger: Trigger, lifespan: Lifespan) -> None:
-        self.method = method
-        self.mock = Mock(method)
+    def __init__(self, kallable: Kallable, trigger: Trigger, lifespan: Lifespan) -> None:
+        self.kallable = kallable
+        self.mock = Mock(kallable)
         self.trigger = trigger
         self.lifespan = lifespan
-        self.enabled = False
-        self.disabled = False
+        self.enabled = False  # toggled everytime the marker is enabled or disabled
+        self.disabled = False  # toggled when a mock is explicitly disabled
 
     @property
     def placeholder(self):
-        """Return a placeholder function that will replace the mocked method under the right environment context."""
+        """
+        Return a placeholder function that will replace the mocked function or method under when the trigger is met.
+        """
 
         def func(*args, **kwargs):
             raise EnvironmentError(
-                f"Method `{self.method.id}` is marked as mocked, "
+                f"Callable `{self.kallable.id}` is marked as mocked, "
                 "and will raise errors if called without using an `Expect` statement to define its mocked behavior."
             )
 
-        func._original_id = self.method.id
-        return self.method.decoration.add(func)
+        func._original_id = self.kallable.id
+        return self.kallable.decoration.add(func)
 
     def enable(self):
         """
-        Replace the mocked method with its placeholder, if the right conditions are met,
-        in order to forbid calls to the original method.
+        Replace the mocked function or method with its placeholder, if the right conditions are met,
+        in order to forbid calls to the original function or method.
         """
         if self.trigger.is_met():
-            setattr(self.method.owner, self.method.name, self.placeholder)
+            setattr(self.kallable.owner, self.kallable.name, self.placeholder)
             self.enabled = True
 
     def disable(self, mark_disabled: bool = False):
-        """Restore the original method and remove any mocking logic."""
-        setattr(self.method.owner, self.method.name, self.method.ref)
+        """Restore the original function or method and remove any mocking logic."""
+        setattr(self.kallable.owner, self.kallable.name, self.kallable.ref)
         self.enabled = False
         self.disabled = mark_disabled
 
     def reset(self):
-        """Reset the marker and its mock."""
+        """Reset the marker and its mock object."""
         self.mock.reset()
         self.enable()
         self.disabled = False

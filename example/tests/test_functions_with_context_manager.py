@@ -10,8 +10,9 @@ from expectise.exceptions import ExpectationError
 
 
 """
-In this example we use the `Expectations` context manager to handle the tear down of our Expect objects.
-When tearing down, we resolve calls to methods that were expected (in the sense of described by an `Expect` statement)
+This example focuses on testing functions = callable objects that are not methods of a class.
+We use the `Expectations` context manager to handle the tear down of our `Expect` objects.
+When tearing down, we resolve calls to functions that were expected (in the sense of described by an `Expect` statement)
 but not performed.
 """
 
@@ -33,7 +34,7 @@ def test_function_called():
 
 
 def test_function_called_with_args():
-    # You can check that the correct arguments are passed to the method call. That said, for this example to work,
+    # You can check that the correct arguments are passed to the function call. That said, for this example to work,
     # you still need to define what the mocked function should return: an `EnvironmentError` is raised.
     with Expectations():
         Expect(some_functions.my_square).to_receive(a=2)
@@ -54,11 +55,11 @@ def test_function_return():
     with Expectations():
         Expect(some_functions.my_sum).to_receive(1, 2).and_return(4)
         # This example is silly of course. Instead, some more complex logic in your module would trigger the call
-        # to `my_sum` with the specific input you expect. Here, we mock the output with a `return 3`.
+        # to `my_sum` with the specific input you expect. Here, we mock the output with a `return 4`.
         assert some_functions.my_sum(1, 2) == 4
 
 
-def test_function_called_twice():
+def test_function_called_twice_error():
     # With the same setup as above, calling the same function a second time will raise an error. 2 `Expect`
     # statements are required for that.
     with Expectations():
@@ -66,6 +67,15 @@ def test_function_called_twice():
         some_functions.my_sum(1, 2)
         with pytest.raises(ExpectationError):
             some_functions.my_sum(1, 2)
+
+
+def test_function_called_twice():
+    # Same setup again, but this time several `Expect` statements properly describe the expected behavior.
+    with Expectations():
+        Expect(some_functions.my_sum).to_receive(1, 2).and_return(4)
+        Expect(some_functions.my_sum).to_receive(1, 2).and_return(5)
+        assert some_functions.my_sum(1, 2) == 4
+        assert some_functions.my_sum(1, 2) == 5
 
 
 def test_function_raise():
@@ -95,16 +105,15 @@ def test_function_raise_only():
 
 
 def test_disable():
-    # Trying to disable a mock
+    # Disabling a permanentmock restores the original behavior of the function.
     with Expectations():
         disable_mock(some_functions.my_square)
         assert some_functions.my_square(2) == 4
 
 
 def test_tear_down_disables_temporary_mocks():
-    # This test ensures that calling mock(...) and then
-    # tearing down (by exiting the context manager)
-    # fully removes the Mock and does not impact future tests
+    # This test ensures that calling mock(...) to create a temporary mock, and then tearing down (by exiting the
+    # context manager) fully removes the mock and does not impact further tests
     with Expectations():
         mock(some_functions.my_root)
         Expect(some_functions.my_root).to_return(2)
@@ -131,9 +140,7 @@ def test_mock_function_with_local_reference():
 
 
 def test_tear_down_keeps_permanent_mocks():
-    # This test ensures that permanent mocks (i.e. those
-    # created with mock_if - wen in the test environment)
-    # are not removed by tear_down
+    # This test ensures that permanent mocks (i.e. those created with mock_if) are not removed by tear_down
     with Expectations():
         Expect(some_functions.my_sum).to_return(0)
         assert some_functions.my_sum(1, 2) == 0

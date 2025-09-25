@@ -24,13 +24,13 @@ class Expect(object):
 
     def __init__(self, mock_ref: Callable) -> None:
         """Initialize an Expect instance with the function or method to be mocked."""
-        self.method = session.get_marker(mock_ref).method
+        self.kallable = session.get_marker(mock_ref).kallable
         self.mock.new()
 
     @property
     def mock(self):
         """Return the Mock object associated with the function or method."""
-        return session.markers[self.method.id].mock
+        return session.markers[self.kallable.id].mock
 
     def to_receive(self, *args, **kwargs) -> Expect:
         """Describe the arguments that the function or method should be called with."""

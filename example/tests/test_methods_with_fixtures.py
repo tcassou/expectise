@@ -11,7 +11,8 @@ from expectise.exceptions import ExpectationError
 
 
 """
-In this example, we implement a Pytest fixture that enumerates methods to be mocked, and resets the mocking context
+This example focuses on testing methods of a class.
+We implement a Pytest fixture that enumerates methods to be mocked, and resets the mocking context
 after each test by calling the `tear_down` function.
 When tearing down, we resolve calls to methods that were expected (in the sense of described by an `Expect` statement)
 but not performed.
@@ -39,7 +40,7 @@ def test_fixture_mock():
     api = SomeOtherAPI()
     assert api.do_advanced_stuff("bar") == "it works!"
 
-    Expect(SomeOtherAPI.secret_info).and_return("********")
+    Expect(SomeOtherAPI.secret_info).to_return("********")
     assert api.secret_info == "********"
 
 
