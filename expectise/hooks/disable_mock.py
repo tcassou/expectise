@@ -1,6 +1,6 @@
 from typing import Callable
 
-from expectise.mock.session import session
+from expectise.lib.session import session
 
 
 def disable_mock(mock_ref: Callable) -> None:

@@ -1,4 +1,4 @@
-from expectise.mock.session import session
+from expectise.lib.session import session
 
 
 def tear_down():

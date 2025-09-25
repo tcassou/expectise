@@ -1,7 +1,7 @@
 from typing import Callable
 from typing import Type
 
-from expectise.mock.session import session
+from expectise.lib.session import session
 from expectise.models import Lifespan
 from expectise.models.method import Method
 from expectise.models.trigger import EnvTrigger
@@ -29,7 +29,11 @@ def mock_if(env_key: str, env_val: str) -> Type:
             * if the environment conditions are met, the method is effectively marked as mocked,
             * if not, the method is left unchanged.
             """
-            self.ref = ref
+            self.method = Method(ref)
+            self._original_id = self.method.id
+            self.marker = session.mark_method(
+                self.method, trigger=EnvTrigger(env_key, env_val), lifespan=Lifespan.PERMANENT
+            )
 
         def __set_name__(self, owner: Type, name: str) -> None:
             """
@@ -37,14 +41,11 @@ def mock_if(env_key: str, env_val: str) -> Type:
             As soon as it is, this `__set_name__` method is called, which gives us a way to know and record the class or
             object that owns the method.
             """
-            method = Method(self.ref, owner=owner)
-            marker = session.mark_method(method, trigger=EnvTrigger(env_key, env_val), lifespan=Lifespan.PERMANENT)
-            # If the environment conditions are not met, the marker is disabled.
-            if not marker.trigger.is_met():
-                return
+            self.method.klass = owner
+            self.marker.enable()
 
-            # If the environment conditions are met, the mocked methods are replaced by placeholders that raise errors
-            # if called without the prior use of an `Expect` statement to define how they should behave during tests.
-            marker.enable()
+        def __call__(self, *args, **kwargs) -> Callable:
+            """ """
+            return getattr(self.method.owner, self.method.name)(*args, **kwargs)
 
     return MockDecorator

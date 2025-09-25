@@ -1,9 +1,9 @@
 from typing import Any
 from typing import Callable
 
+from .mock_instance import MockInstance
 from expectise.exceptions import EnvironmentError
 from expectise.exceptions import ExpectationError
-from expectise.mock.mock_instance import MockInstance
 from expectise.models.method import Method
 from expectise.utils.diff import Diff
 
@@ -72,7 +72,7 @@ class Mock:
     def assert_arguments(self, func_args: list[Any], func_kwargs: dict[Any, Any]) -> None:
         """Assert equality of function or method call arguments with the expected arguments."""
         args, kwargs = self.current_instance.call_arguments
-        args_start_index = 0 if self.method.decoration.is_staticmethod else 1
+        args_start_index = 1 if (self.method.is_bound_method and not self.method.decoration.is_staticmethod) else 0
         msg = f"`{self.method.id}` called with " + "unexpected {} arguments:\n\n"
         if args != func_args[args_start_index:]:
             raise ExpectationError(msg.format("positional") + Diff.print(args, func_args[args_start_index]))

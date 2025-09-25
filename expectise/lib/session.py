@@ -45,7 +45,11 @@ class Session:
                 "with the `@mock_if` decorator, or through standalone `mock` statements."
             )
 
-        return self.markers[mock_function._original_id]
+        marker = self.markers[mock_function._original_id]
+        if marker.method.klass is None:
+            marker.enable()
+
+        return marker
 
     def tear_down(self):
         """

@@ -1,4 +1,4 @@
-from expectise.mock.session import session
+from .session import session
 
 
 class Expectations:

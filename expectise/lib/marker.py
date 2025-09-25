@@ -1,5 +1,5 @@
+from .mock import Mock
 from expectise.exceptions import EnvironmentError
-from expectise.mock.mock import Mock
 from expectise.models import Lifespan
 from expectise.models.method import Method
 from expectise.models.trigger import Trigger
@@ -38,8 +38,12 @@ class Marker:
         return self.method.decoration.add(func)
 
     def enable(self):
-        """Replace the mocked method with its placeholder in order to forbid calls to the original method."""
-        setattr(self.method.owner, self.method.name, self.placeholder)
+        """
+        Replace the mocked method with its placeholder, if the right conditions are met,
+        in order to forbid calls to the original method.
+        """
+        if self.trigger.is_met():
+            setattr(self.method.owner, self.method.name, self.placeholder)
 
     def disable(self):
         """Restore the original method and remove any mocking logic."""

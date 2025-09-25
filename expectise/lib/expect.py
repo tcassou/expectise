@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 from typing import Callable
 
-from expectise.mock.session import session
+from .session import session
 
 
 class Expect(object):
