@@ -22,8 +22,20 @@ class Kallable:
         self.is_bound_method = "." in self.qualname  # for direct mock() statements, we can't know the owning class
         self.module_name = ref_function.__module__
         self.module = import_module(self.module_name)
-        self.klass = klass
+        self._klass = klass
         self.id = f"{self.module_name}.{self.qualname}"
+
+    @property
+    def klass(self):
+        if self._klass:
+            return self._klass
+        if self.is_bound_method:
+            return getattr(self.module, self.qualname.split(".")[0])
+        return None
+
+    @klass.setter
+    def klass(self, value):
+        self._klass = value
 
     @property
     def owner(self):
@@ -35,8 +47,5 @@ class Kallable:
         """
         if self.klass:
             return self.klass
-
-        if self.is_bound_method:
-            return getattr(self.module, self.qualname.split(".")[0])
 
         return self.module

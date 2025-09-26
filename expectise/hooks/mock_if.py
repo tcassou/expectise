@@ -48,6 +48,9 @@ def mock_if(env_key: str, env_val: str) -> Type:
             self.kallable.klass = owner
             self.marker.enable()
 
+        def __repr__(self) -> str:
+            return self.kallable.ref.__repr__()
+
         def __call__(self, *args, **kwargs) -> Callable:
             """
             Applies to standalone functions only.
@@ -56,12 +59,17 @@ def mock_if(env_key: str, env_val: str) -> Type:
             If the function is called without using an `Expect` statement to define its mocked behavior,
             we need to raise an error, unless the marker was explicitly disabled.
             """
-            if not self.marker.enabled and not self.marker.disabled:
-                raise EnvironmentError(
-                    f"Callable `{self.kallable.id}` is marked as mocked, "
-                    "and will raise errors if called without using an `Expect` statement to define its mocked behavior."
-                )
+            # For standalone functions decorated with `mock_if`, when the marker is not supposed to be enabled,
+            # the trigger needs to be checked and if not met, the original function should be called.
+            if not self.marker.trigger.is_met():
+                return self.kallable.ref(*args, **kwargs)
 
-            return getattr(self.kallable.owner, self.kallable.name)(*args, **kwargs)
+            # If the trigger is met, this block should never be reached:
+            # * the marker is either enabled, in which case the function override is already applied,
+            # * or the marker is explicitly disabled, in which case the original function should be called.
+            raise EnvironmentError(
+                f"Callable `{self.kallable.id}` is marked as mocked, "
+                "and will raise errors if called without using an `Expect` statement to define its mocked behavior."
+            )
 
     return MockDecorator

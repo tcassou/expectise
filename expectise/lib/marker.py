@@ -49,6 +49,8 @@ class Marker:
         if self.trigger.is_met():
             setattr(self.kallable.owner, self.kallable.name, self.placeholder)
             self.enabled = True
+        else:
+            self.disable()
 
     def disable(self, mark_disabled: bool = False):
         """Restore the original function or method and remove any mocking logic."""

@@ -4,6 +4,7 @@ from typing import Any
 from typing import Callable
 
 from .session import session
+from expectise.exceptions import EnvironmentError
 
 
 class Expect(object):
@@ -24,7 +25,14 @@ class Expect(object):
 
     def __init__(self, mock_ref: Callable) -> None:
         """Initialize an Expect instance with the function or method to be mocked."""
-        self.kallable = session.get_marker(mock_ref).kallable
+        marker = session.get_marker(mock_ref)
+        if not marker.enabled:
+            raise EnvironmentError(
+                f"The marker for `{marker.kallable.id}` is not enabled, so this instantiation is not allowed. "
+                "Check that the right environment variable are set."
+            )
+
+        self.kallable = marker.kallable
         self.mock.new()
 
     @property
