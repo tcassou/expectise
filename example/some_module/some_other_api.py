@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-
-
 class SomeOtherAPI:
     def __init__(self, foo: int = 1) -> None:
         self.foo = foo

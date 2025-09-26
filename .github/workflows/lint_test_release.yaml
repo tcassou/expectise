@@ -1,6 +1,10 @@
 name: Lint, Test and Release
 
-on: [push]
+on:
+  pull_request:
+  push:
+    branches:
+      - "master"
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -26,18 +30,18 @@ jobs:
           virtualenvs-create: true
           virtualenvs-in-project: true
 
-      - name: Load cached venv
+      - name: Load Cached Venv
         id: cached-poetry-dependencies
         uses: actions/cache@v4
         with:
           path: .venv
           key: venv-${{ runner.os }}-${{ steps.setup.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}-${{ hashFiles('**/pyproject.toml') }}-${{ hashFiles('**/.pre-commit-config.yaml') }}
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: poetry install
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
 
-      - name: Run linting pre-commit hooks
+      - name: Run Linters
         run: script -e -c "poetry run pre-commit run --all-files"
 
   test:
@@ -64,18 +68,18 @@ jobs:
           virtualenvs-create: true
           virtualenvs-in-project: true
 
-      - name: Load cached venv
+      - name: Load Cached Venv
         id: cached-poetry-dependencies
         uses: actions/cache@v4
         with:
           path: .venv
           key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}-${{ hashFiles('**/pyproject.toml') }}-${{ hashFiles('**/.pre-commit-config.yaml') }}
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: poetry install
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
 
-      - name: Run unit tests
+      - name: Run Unit Tests
         env:
           ENV: test
         run: script -e -c "poetry run python -m pytest -v example/tests"
@@ -115,7 +119,7 @@ jobs:
           virtualenvs-create: true
           virtualenvs-in-project: true
 
-      - name: Load cached venv
+      - name: Load Cached Venv
         id: cached-poetry-dependencies
         uses: actions/cache@v4
         with:
@@ -123,14 +127,14 @@ jobs:
           key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}-${{ hashFiles('**/pyproject.toml') }}-${{ hashFiles('**/.pre-commit-config.yaml') }}
 
       # Installing twine in a separate step to prevent circular dependencies and conflicts with cache
-      - name: Install pip twine
+      - name: Install Twine
         run: pip install --upgrade pip twine
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: poetry install
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
 
-      - name: Build and publish to Pypi
+      - name: Build and Publish to Pypi
         env:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}

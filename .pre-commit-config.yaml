@@ -40,6 +40,7 @@ repos:
     hooks:
       - id: flake8
         name: Flake8
+        exclude: __init__.py
   - repo: https://github.com/ubersan/pylic
     rev: v5.0.1
     hooks:
