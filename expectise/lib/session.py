@@ -61,7 +61,7 @@ class Session:
         marker = self.markers[kallable_id]
         if marker.kallable.klass is None and not marker.disabled:
             # for standalone functions without explicitly disabled markers, the marker is enabled on the fly
-            marker.enable()
+            marker.set_up()
 
         return marker
 

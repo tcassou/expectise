@@ -34,3 +34,7 @@ class SomeAPI:
 
     def unmocked_method(self):
         return "unmocked"
+
+    @mock_if("ENV", "dev")
+    def dev_method(self):
+        return "maintenance"

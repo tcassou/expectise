@@ -129,3 +129,11 @@ def test_disable():
     # Disabling the mock should allow setting the property
     disable_mock(some_functions.my_root)
     assert some_functions.my_root(4) == 2
+
+
+def test_function_unmocked():
+    # A function that is not decorated with mock_if, nor mocked explicitly will be left unchanged.
+    assert some_functions.my_subtraction(1, 1) == 0
+    # Any attempt to mock it will raise an error
+    with pytest.raises(EnvironmentError):
+        Expect(some_functions.my_subtraction).to_return(1)

@@ -147,3 +147,11 @@ def test_tear_down_keeps_permanent_mocks():
 
     with pytest.raises(EnvironmentError):
         some_functions.my_sum(1, 2)
+
+
+def test_function_mocked_in_other_environment():
+    # A function mocked with mock_if and unmet environment conditions is left unchanged
+    assert some_functions.debug() == "[DEBUG] This has to be a flaky operation"
+    # Any attempt to mock it will raise an error
+    with pytest.raises(EnvironmentError):
+        Expect(some_functions.debug).to_return("Found it!")

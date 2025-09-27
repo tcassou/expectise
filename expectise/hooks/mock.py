@@ -14,4 +14,4 @@ def mock(ref: Callable) -> None:
     """
     kallable = Kallable(ref)  # without any dynamic imports, no easy way to know the owning class here, if applicable
     marker = session.mark_method(kallable, trigger=AlwaysTrigger(), lifespan=Lifespan.TEMPORARY)
-    marker.enable()
+    marker.set_up()

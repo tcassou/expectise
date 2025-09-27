@@ -41,7 +41,7 @@ class Marker:
         func._original_id = self.kallable.id
         return self.kallable.decoration.add(func)
 
-    def enable(self):
+    def set_up(self):
         """
         Replace the mocked function or method with its placeholder, if the right conditions are met,
         in order to forbid calls to the original function or method.
@@ -61,5 +61,5 @@ class Marker:
     def reset(self):
         """Reset the marker and its mock object."""
         self.mock.reset()
-        self.enable()
+        self.set_up()
         self.disabled = False

@@ -151,3 +151,11 @@ def test_tear_down_keeps_permanent_mocks():
 
     with pytest.raises(EnvironmentError):
         some_api.mocked_method()
+
+
+def test_method_mocked_in_other_environment():
+    # A method mocked with mock_if and unmet environment conditions is letf unchanged
+    assert SomeAPI().dev_method() == "maintenance"
+    # Any attempt to mock it will raise an error
+    with pytest.raises(EnvironmentError):
+        Expect(SomeAPI.dev_method).to_return("no downtime")

@@ -21,3 +21,12 @@ def my_product(a: int, b: int) -> int:
 
 def my_division(a: int, b: int) -> int:
     return a / b
+
+
+def my_subtraction(a: int, b: int) -> int:
+    return a - b
+
+
+@mock_if("ENV", "dev")
+def debug():
+    return "[DEBUG] This has to be a flaky operation"

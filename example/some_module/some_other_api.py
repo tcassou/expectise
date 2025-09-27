@@ -9,3 +9,7 @@ class SomeOtherAPI:
     @property
     def secret_info(self) -> str:
         return "P@55W0RD"
+
+    @staticmethod
+    def encrypt(raw_password: str) -> str:
+        return "********"

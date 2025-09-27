@@ -150,3 +150,11 @@ def test_disable():
     some_other_api = SomeOtherAPI(foo=5)
     val = some_other_api.do_advanced_stuff(bar="high")
     assert val == "high>>5"
+
+
+def test_method_unmocked():
+    # A method that is not decorated with mock_if, nor mocked explicitly will be left unchanged.
+    assert SomeOtherAPI().encrypt("password") == "********"
+    # Any attempt to mock it will raise an error
+    with pytest.raises(EnvironmentError):
+        Expect(SomeOtherAPI.encrypt).to_return("password")

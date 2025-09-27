@@ -46,7 +46,7 @@ def mock_if(env_key: str, env_val: str) -> Type:
             that owns the method to be mocked.
             """
             self.kallable.klass = owner
-            self.marker.enable()
+            self.marker.set_up()
 
         def __repr__(self) -> str:
             return self.kallable.ref.__repr__()
@@ -59,9 +59,11 @@ def mock_if(env_key: str, env_val: str) -> Type:
             If the function is called without using an `Expect` statement to define its mocked behavior,
             we need to raise an error, unless the marker was explicitly disabled.
             """
-            # For standalone functions decorated with `mock_if`, when the marker is not supposed to be enabled,
-            # the trigger needs to be checked and if not met, the original function should be called.
-            if not self.marker.trigger.is_met():
+            self.marker.set_up()
+            # For standalone functions decorated with `mock_if`, when environment conditions are not met,
+            # the original function should be called. This block will be executed only once, and further calls
+            # to the function will
+            if not self.marker.enabled:
                 return self.kallable.ref(*args, **kwargs)
 
             # If the trigger is met, this block should never be reached:
