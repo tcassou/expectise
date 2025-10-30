@@ -155,3 +155,12 @@ def test_function_mocked_in_other_environment():
     # Any attempt to mock it will raise an error
     with pytest.raises(EnvironmentError):
         Expect(some_functions.debug).to_return("Found it!")
+
+
+@pytest.mark.asyncio
+async def test_async_function():
+    # Everything works with async functions
+    with Expectations():
+        Expect(some_functions.asum).to_receive(1, 2).and_return(10)
+        result = await some_functions.asum(1, 2)
+        assert result == 10

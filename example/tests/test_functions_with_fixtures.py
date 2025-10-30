@@ -24,6 +24,7 @@ def run_around_tests():
     # no preceded by a mock_if decorator
     mock(some_functions.my_root)
     mock(some_functions.my_product)
+    mock(some_functions.aroot)
     # A test function will be run at this point
     yield
     # Tear down code that will run after each test
@@ -137,3 +138,11 @@ def test_function_unmocked():
     # Any attempt to mock it will raise an error
     with pytest.raises(EnvironmentError):
         Expect(some_functions.my_subtraction).to_return(1)
+
+
+@pytest.mark.asyncio
+async def test_async_function():
+    # Everything works with async functions
+    Expect(some_functions.aroot).to_receive(4).and_return(1)
+    result = await some_functions.aroot(4)
+    assert result == 1

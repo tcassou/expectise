@@ -159,3 +159,12 @@ def test_method_mocked_in_other_environment():
     # Any attempt to mock it will raise an error
     with pytest.raises(EnvironmentError):
         Expect(SomeAPI.dev_method).to_return("no downtime")
+
+
+@pytest.mark.asyncio
+async def test_async_method():
+    # Everything works with async methods
+    with Expectations():
+        Expect(SomeAPI.async_method).to_receive(1).and_return("not_async_anymore?")
+        result = await SomeAPI().async_method(1)
+        assert result == "not_async_anymore?"

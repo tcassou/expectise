@@ -38,3 +38,7 @@ class SomeAPI:
     @mock_if("ENV", "dev")
     def dev_method(self):
         return "maintenance"
+
+    @mock_if("ENV", "test")
+    async def async_method(self, a: int):
+        return "async"

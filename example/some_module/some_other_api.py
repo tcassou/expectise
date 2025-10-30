@@ -13,3 +13,6 @@ class SomeOtherAPI:
     @staticmethod
     def encrypt(raw_password: str) -> str:
         return "********"
+
+    async def async_method(self) -> str:
+        return "async"

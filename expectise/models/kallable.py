@@ -1,3 +1,4 @@
+import inspect
 from importlib import import_module
 from typing import Callable
 from typing import Type
@@ -20,6 +21,7 @@ class Kallable:
         self.name = ref_function.__name__
         self.qualname = ref_function.__qualname__
         self.is_bound_method = "." in self.qualname  # for direct mock() statements, we can't know the owning class
+        self.is_coroutine = inspect.iscoroutinefunction(ref_function)
         self.module_name = ref_function.__module__
         self.module = import_module(self.module_name)
         self._klass = klass

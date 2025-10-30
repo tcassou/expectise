@@ -30,3 +30,12 @@ def my_subtraction(a: int, b: int) -> int:
 @mock_if("ENV", "dev")
 def debug():
     return "[DEBUG] This has to be a flaky operation"
+
+
+@mock_if("ENV", "test")
+async def asum(a: int, b: int) -> int:
+    return a + b
+
+
+async def aroot(a: int) -> int:
+    return a**0.5

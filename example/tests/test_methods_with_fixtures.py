@@ -25,6 +25,7 @@ def run_around_tests():
     # no preceded by a mock_if decorator
     mock(SomeOtherAPI.do_advanced_stuff)
     mock(SomeOtherAPI.secret_info)
+    mock(SomeOtherAPI.async_method)
     # A test function will be run at this point
     yield
     # Tear down code that will run after each test
@@ -158,3 +159,11 @@ def test_method_unmocked():
     # Any attempt to mock it will raise an error
     with pytest.raises(EnvironmentError):
         Expect(SomeOtherAPI.encrypt).to_return("password")
+
+
+@pytest.mark.asyncio
+async def test_async_method():
+    # Everything works with async methods
+    Expect(SomeAPI.async_method).to_return("not_async_anymore?")
+    result = await SomeAPI().async_method()
+    assert result == "not_async_anymore?"

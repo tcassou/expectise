@@ -4,6 +4,7 @@ from typing import Callable
 from .mock_instance import MockInstance
 from expectise.exceptions import EnvironmentError
 from expectise.exceptions import ExpectationError
+from expectise.models.awaitable import Awaitable
 from expectise.models.kallable import Kallable
 from expectise.utils.diff import Diff
 
@@ -57,7 +58,7 @@ class Mock:
 
     def add_return_value(self, value: Any) -> None:
         """Add a return value to the mock."""
-        self.last_instance.return_value = value
+        self.last_instance.return_value = Awaitable(value) if self.kallable.is_coroutine else value
 
     def add_execution_errors(self, value: Any) -> None:
         """Add an execution error to the mock."""
